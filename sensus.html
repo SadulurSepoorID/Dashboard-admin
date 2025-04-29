@@ -121,11 +121,13 @@
 
   <div class="container">
     <h2>Data Kereta</h2>
+    <input type="text" id="searchInput" placeholder="Cari nama / nomor / seri lokomotif..." oninput="filterDataKereta()" style="width:100%; padding:10px; margin-bottom:15px; border:1px solid #ccc; border-radius:5px;">
     <div id="dataKereta">Memuat data...</div>
   </div>
 
   <script>
     const apiUrl = "https://sheetdb.io/api/v1/7lz7wp17epvwk";
+    let allTrainData = [];
 
     function toggleForm() {
       const form = document.getElementById("formWrapper");
@@ -174,44 +176,59 @@
       fetch(apiUrl)
         .then(res => res.json())
         .then(data => {
-          const container = document.getElementById('dataKereta');
-          container.innerHTML = "";
-
-          data.sort((a, b) => parseInt(a.nomor_kereta) - parseInt(b.nomor_kereta));
-
-          if (data.length === 0) {
-            container.innerHTML = "<i>Belum ada data kereta.</i>";
-            return;
-          }
-
-          data.forEach(item => {
-            const card = document.createElement('div');
-            card.classList.add('data-card');
-            card.innerHTML = `
-              <div class="card-view">
-                <strong>${item.nama_kereta} (${item.nomor_kereta})</strong><br>
-                ${item.seri_lokomotif}<br>
-                ${item.relasi}<br>
-                ${item.jam_keberangkatan} → ${item.jam_kedatangan}
-              </div>
-              <div class="card-actions">
-                <button onclick="toggleEdit(this)">Edit</button>
-                <button style="background-color:red;" onclick="hapusKereta('${item.id}')">Hapus</button>
-              </div>
-              <div class="card-edit">
-                <input type="text" value="${item.nama_kereta}" placeholder="Nama Kereta">
-                <input type="number" value="${item.nomor_kereta}" placeholder="Nomor Kereta">
-                <input type="text" value="${item.seri_lokomotif}" placeholder="Seri Lokomotif">
-                <input type="text" value="${item.relasi}" placeholder="Relasi">
-                <input type="text" value="${item.jam_keberangkatan}" placeholder="Jam Keberangkatan">
-                <input type="text" value="${item.jam_kedatangan}" placeholder="Jam Kedatangan">
-                <button onclick="simpanEdit(this, '${item.id}')">Simpan</button>
-                <button onclick="toggleEdit(this)">Batal</button>
-              </div>
-            `;
-            container.appendChild(card);
-          });
+          allTrainData = data;
+          renderDataKereta(data);
         });
+    }
+
+    function renderDataKereta(data) {
+      const container = document.getElementById('dataKereta');
+      container.innerHTML = "";
+
+      data.sort((a, b) => parseInt(a.nomor_kereta) - parseInt(b.nomor_kereta));
+
+      if (data.length === 0) {
+        container.innerHTML = "<i>Data tidak ditemukan.</i>";
+        return;
+      }
+
+      data.forEach(item => {
+        const card = document.createElement('div');
+        card.classList.add('data-card');
+        card.innerHTML = `
+          <div class="card-view">
+            <strong>${item.nama_kereta} (${item.nomor_kereta})</strong><br>
+            ${item.seri_lokomotif}<br>
+            ${item.relasi}<br>
+            ${item.jam_keberangkatan} → ${item.jam_kedatangan}
+          </div>
+          <div class="card-actions">
+            <button onclick="toggleEdit(this)">Edit</button>
+            <button style="background-color:red;" onclick="hapusKereta('${item.id}')">Hapus</button>
+          </div>
+          <div class="card-edit">
+            <input type="text" value="${item.nama_kereta}" placeholder="Nama Kereta">
+            <input type="number" value="${item.nomor_kereta}" placeholder="Nomor Kereta">
+            <input type="text" value="${item.seri_lokomotif}" placeholder="Seri Lokomotif">
+            <input type="text" value="${item.relasi}" placeholder="Relasi">
+            <input type="text" value="${item.jam_keberangkatan}" placeholder="Jam Keberangkatan">
+            <input type="text" value="${item.jam_kedatangan}" placeholder="Jam Kedatangan">
+            <button onclick="simpanEdit(this, '${item.id}')">Simpan</button>
+            <button onclick="toggleEdit(this)">Batal</button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function filterDataKereta() {
+      const keyword = document.getElementById('searchInput').value.toLowerCase();
+      const filtered = allTrainData.filter(item =>
+        item.nama_kereta.toLowerCase().includes(keyword) ||
+        item.nomor_kereta.toLowerCase().includes(keyword) ||
+        item.seri_lokomotif.toLowerCase().includes(keyword)
+      );
+      renderDataKereta(filtered);
     }
 
     function toggleEdit(button) {
