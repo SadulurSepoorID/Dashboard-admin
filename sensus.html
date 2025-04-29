@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin - Data Kereta</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f8f8f8;
+      overflow-x: hidden;
+    }
+    header {
+      background-color: #003366;
+      color: white;
+      padding: 20px 0;
+      text-align: center;
+    }
+    .container {
+      width: 100%;
+      max-width: 1000px;
+      margin: 20px auto;
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    h2 { color: #003366; }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    input[type="text"], input[type="number"] {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+    button {
+      background-color: #003366;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background-color: #00509e;
+    }
+    .data-card {
+      background-color: #f1f1f1;
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 6px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      position: relative;
+    }
+    .card-actions {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      display: flex;
+      gap: 10px;
+    }
+    .card-edit {
+      display: none;
+      margin-top: 10px;
+    }
+    #formWrapper {
+      display: none;
+      margin-top: 20px;
+    }
+    @media screen and (max-width: 768px) {
+      .container { padding: 15px; }
+      .card-actions {
+        position: static;
+        margin-top: 10px;
+        justify-content: end;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Admin - Data Kereta</h1>
+    <button onclick="window.location.href='index.html'">Kembali</button>
+  </header>
+
+  <div class="container">
+    <button onclick="toggleForm()">+ New Data Train</button>
+    <div id="formWrapper">
+      <h2>Tambah Data Kereta</h2>
+      <form id="trainForm">
+        <div class="form-group">
+          <input type="text" name="nama_kereta" placeholder="Nama Kereta" required>
+        </div>
+        <div class="form-group">
+          <input type="number" name="nomor_kereta" placeholder="Nomor Kereta" required>
+        </div>
+        <div class="form-group">
+          <input type="text" name="seri_lokomotif" placeholder="Seri Lokomotif" required>
+        </div>
+        <div class="form-group">
+          <input type="text" name="relasi" placeholder="Relasi (Kota A - Kota B)" required>
+        </div>
+        <div class="form-group">
+          <input type="text" name="jam_keberangkatan" placeholder="Jam Keberangkatan (DD/MM)" required>
+        </div>
+        <div class="form-group">
+          <input type="text" name="jam_kedatangan" placeholder="Jam Kedatangan (DD/MM)" required>
+        </div>
+        <button type="submit">Tambah Data</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="container">
+    <h2>Data Kereta</h2>
+    <div id="dataKereta">Memuat data...</div>
+  </div>
+
+  <script>
+    const apiUrl = "https://sheetdb.io/api/v1/7lz7wp17epvwk";
+
+    function toggleForm() {
+      const form = document.getElementById("formWrapper");
+      form.style.display = form.style.display === "none" ? "block" : "none";
+    }
+
+    document.getElementById('trainForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      const allData = await fetch(apiUrl).then(res => res.json());
+      let nextId = 1;
+      if (allData.length > 0) {
+        const ids = allData.map(item => parseInt(item.id)).filter(n => !isNaN(n));
+        nextId = Math.max(...ids) + 1;
+      }
+
+      const data = {
+        data: {
+          id: nextId,
+          nama_kereta: formData.get('nama_kereta'),
+          nomor_kereta: formData.get('nomor_kereta'),
+          seri_lokomotif: formData.get('seri_lokomotif'),
+          relasi: formData.get('relasi'),
+          jam_keberangkatan: formData.get('jam_keberangkatan'),
+          jam_kedatangan: formData.get('jam_kedatangan')
+        }
+      };
+
+      fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      }).then(res => {
+        if(res.ok) {
+          alert("Data berhasil ditambahkan!");
+          this.reset();
+          document.getElementById("formWrapper").style.display = "none";
+          loadDataKereta();
+        } else {
+          alert("Gagal menambahkan data.");
+        }
+      });
+    });
+
+    function loadDataKereta() {
+      fetch(apiUrl)
+        .then(res => res.json())
+        .then(data => {
+          const container = document.getElementById('dataKereta');
+          container.innerHTML = "";
+
+          data.sort((a, b) => parseInt(a.nomor_kereta) - parseInt(b.nomor_kereta));
+
+          if (data.length === 0) {
+            container.innerHTML = "<i>Belum ada data kereta.</i>";
+            return;
+          }
+
+          data.forEach(item => {
+            const card = document.createElement('div');
+            card.classList.add('data-card');
+            card.innerHTML = `
+              <div class="card-view">
+                <strong>${item.nama_kereta} (${item.nomor_kereta})</strong><br>
+                ${item.seri_lokomotif}<br>
+                ${item.relasi}<br>
+                ${item.jam_keberangkatan} → ${item.jam_kedatangan}
+              </div>
+              <div class="card-actions">
+                <button onclick="toggleEdit(this)">Edit</button>
+                <button style="background-color:red;" onclick="hapusKereta('${item.id}')">Hapus</button>
+              </div>
+              <div class="card-edit">
+                <input type="text" value="${item.nama_kereta}" placeholder="Nama Kereta">
+                <input type="number" value="${item.nomor_kereta}" placeholder="Nomor Kereta">
+                <input type="text" value="${item.seri_lokomotif}" placeholder="Seri Lokomotif">
+                <input type="text" value="${item.relasi}" placeholder="Relasi">
+                <input type="text" value="${item.jam_keberangkatan}" placeholder="Jam Keberangkatan">
+                <input type="text" value="${item.jam_kedatangan}" placeholder="Jam Kedatangan">
+                <button onclick="simpanEdit(this, '${item.id}')">Simpan</button>
+                <button onclick="toggleEdit(this)">Batal</button>
+              </div>
+            `;
+            container.appendChild(card);
+          });
+        });
+    }
+
+    function toggleEdit(button) {
+      const card = button.closest('.data-card');
+      const view = card.querySelector('.card-view');
+      const edit = card.querySelector('.card-edit');
+      view.style.display = view.style.display === 'none' ? 'block' : 'none';
+      edit.style.display = edit.style.display === 'block' ? 'none' : 'block';
+    }
+
+    function simpanEdit(button, id) {
+      const editInputs = button.closest('.card-edit').querySelectorAll('input');
+      const data = {
+        data: {
+          nama_kereta: editInputs[0].value,
+          nomor_kereta: editInputs[1].value,
+          seri_lokomotif: editInputs[2].value,
+          relasi: editInputs[3].value,
+          jam_keberangkatan: editInputs[4].value,
+          jam_kedatangan: editInputs[5].value
+        }
+      };
+      fetch(`${apiUrl}/id/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      }).then(res => {
+        if(res.ok) {
+          alert("Data berhasil diperbarui!");
+          loadDataKereta();
+        } else {
+          alert("Gagal memperbarui data.");
+        }
+      });
+    }
+
+    function hapusKereta(id) {
+      if (confirm("Yakin mau hapus data ini?")) {
+        fetch(`${apiUrl}/id/${id}`, { method: 'DELETE' })
+          .then(res => {
+            if (res.ok) {
+              alert("Data berhasil dihapus.");
+              loadDataKereta();
+            } else {
+              alert("Gagal hapus data.");
+            }
+          });
+      }
+    }
+
+    loadDataKereta();
+  </script>
+</body>
+</html>
