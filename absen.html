@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Admin</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f0f4f8;
+    }
+
+    h2 {
+      text-align: center;
+      color: #2b7de9;
+      margin-bottom: 30px;
+    }
+
+    .table-container {
+      overflow-x: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 15px;
+    }
+
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid #e0e0e0;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f7f9fb;
+      color: #333;
+      font-weight: 600;
+    }
+
+    tr:hover {
+      background-color: #f1f7ff;
+    }
+
+    button {
+      padding: 6px 12px;
+      margin: 2px;
+      font-size: 13px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      color: white;
+      transition: background 0.2s;
+    }
+
+    .setuju {
+      background-color: #28a745;
+    }
+
+    .edit {
+      background-color: #ffc107;
+      color: #333;
+    }
+
+    .hapus {
+      background-color: #dc3545;
+    }
+
+    @media (max-width: 600px) {
+      table {
+        font-size: 13px;
+      }
+
+      button {
+        font-size: 12px;
+        padding: 5px 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <a href="index.html" style="
+  display: inline-block;
+  background: white;
+  color: #2b7de9;
+  border: 1.5px solid #2b7de9;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  margin-bottom: 10px;
+" onmouseover="this.style.background='#2b7de9';this.style.color='white'" onmouseout="this.style.background='white';this.style.color='#2b7de9'">
+  ← Kembali
+</a>
+
+  <h2>Dashboard Admin</h2>
+  <div class="table-container">
+    <table id="dataTable">
+      <thead>
+        <tr>
+          <th>Nama</th>
+          <th>NIA</th>
+          <th>WA</th>
+          <th>Kegiatan</th>
+          <th>Status</th>
+          <th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script>
+    const scriptURL = "https://script.google.com/macros/s/AKfycbxXi1daPkKsg0OvjO-Ow0NlgqUBGlalWKTu8Y_PSQfdPslvq_Cw4TM5ffUleEoa32nv/exec";
+
+    function fetchData() {
+      fetch(`${scriptURL}?action=getAllData`)
+        .then(res => res.json())
+        .then(data => {
+          const tbody = document.querySelector('#dataTable tbody');
+          tbody.innerHTML = '';
+          data.forEach((row, index) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>${row[0]}</td>
+              <td>${row[1]}</td>
+              <td>${row[2]}</td>
+              <td>${row[3]}</td>
+              <td>${row[4]}</td>
+              <td>
+                <button class="setuju" onclick="setStatus(${index + 2}, 'Setuju')">Setuju</button>
+                <button class="edit" onclick="editStatus(${index + 2})">Edit</button>
+                <button class="hapus" onclick="hapusData(${index + 2})">Hapus</button>
+              </td>
+            `;
+            tbody.appendChild(tr);
+          });
+        });
+    }
+
+    function setStatus(row, status) {
+      if (!status) return;
+      fetch(`${scriptURL}?action=updateStatus&row=${row}&status=${encodeURIComponent(status)}`)
+        .then(res => res.text())
+        .then(() => fetchData());
+    }
+
+    function editStatus(row) {
+      const newStatus = prompt("Masukkan status baru (Izin / Sakit):");
+      if (newStatus) setStatus(row, newStatus);
+    }
+
+    function hapusData(row) {
+      if (confirm("Yakin ingin menghapus data ini?")) {
+        fetch(`${scriptURL}?action=deleteData&row=${row}`)
+          .then(res => res.text())
+          .then(() => fetchData());
+      }
+    }
+
+    fetchData(); // Load data saat halaman dibuka
+  </script>
+</body>
+</html>
