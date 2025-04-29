@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard Admin</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #ffffff;
+      display: flex;
+      justify-content: center;
+    }
+    .container {
+      width: 100%;
+      max-width: 1000px;
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+      overflow-x: auto;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .header a {
+      text-decoration: none;
+      color: #1a73e8;
+      font-weight: bold;
+      border: 2px solid #1a73e8;
+      padding: 6px 12px;
+      border-radius: 8px;
+      transition: 0.3s;
+    }
+    .header a:hover {
+      background-color: #1a73e8;
+      color: #fff;
+    }
+    .header h2 {
+      margin: 10px 0;
+      color: #1a73e8;
+      text-align: center;
+      flex: 1;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: left;
+    }
+    th {
+      background-color: #1a73e8;
+      color: white;
+    }
+    td a {
+      color: #1a73e8;
+      text-decoration: underline;
+    }
+
+    .btn {
+      padding: 6px 12px;
+      font-weight: bold;
+      font-size: 13px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-bottom: 4px;
+    }
+    .btn.setuju {
+      background-color: #28a745;
+      color: #fff;
+    }
+    .btn.setuju:hover {
+      background-color: #218838;
+    }
+    .btn.hapus {
+      background-color: #dc3545;
+      color: #fff;
+    }
+    .btn.hapus:hover {
+      background-color: #c82333;
+    }
+
+    @media screen and (max-width: 768px) {
+      table {
+        font-size: 13px;
+      }
+      .header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .header h2 {
+        text-align: left;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <a href="index.html">← Kembali</a>
+      <h2>Dashboard Admin</h2>
+    </div>
+
+    <table id="dataTable">
+      <thead>
+        <tr>
+          <th>Waktu</th>
+          <th>Nama</th>
+          <th>NIA</th>
+          <th>WA</th>
+          <th>Kegiatan</th>
+          <th>Alasan</th>
+          <th>Bukti</th>
+          <th>Status</th>
+          <th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script>
+    const sheetUrl = "https://script.google.com/macros/s/AKfycbxmu7E2fCVpF3T-rwNCijQYGdFKhpwAVFw7SU5e_CgftQyiooZJ_oSxG6eamMsXQgRe/exec";
+
+    async function fetchData() {
+      const response = await fetch(sheetUrl + "?action=getData");
+      const data = await response.json();
+      const tableBody = document.querySelector("#dataTable tbody");
+      tableBody.innerHTML = "";
+
+      data.forEach(row => {
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+          <td>${row.timestamp}</td>
+          <td>${row.nama}</td>
+          <td>${row.nia}</td>
+          <td>${row.wa}</td>
+          <td>${row.kegiatan}</td>
+          <td>${row.alasan}</td>
+          <td>${row.bukti ? `<a href="${row.bukti}" target="_blank">Lihat</a>` : '-'}</td>
+          <td>${row.status || '-'}</td>
+          <td>
+            <button class="btn setuju" onclick="updateStatus('${row.id}', 'Setuju')">Setuju</button><br/>
+            <button class="btn hapus" onclick="deleteData('${row.id}')">Hapus</button>
+          </td>
+        `;
+
+        tableBody.appendChild(tr);
+      });
+    }
+
+    async function updateStatus(id, status) {
+      await fetch(`${sheetUrl}?action=updateStatus&id=${id}&status=${status}`);
+      fetchData();
+    }
+
+    async function deleteData(id) {
+      if (confirm("Yakin mau hapus data ini?")) {
+        await fetch(`${sheetUrl}?action=deleteData&id=${id}`);
+        fetchData();
+      }
+    }
+
+    fetchData();
+  </script>
+</body>
+</html>
