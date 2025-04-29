@@ -4,6 +4,7 @@ const validAccounts = [
     { username: "ALDI HADIANSYAH", kta: "0013", password: "aldi321" },
     { username: "Eki Apriandi solichan", kta: "0021", password: "eki321" },
     { username: "M Rizky H", kta: "0029", password: "rizky789" },
+    { username: "Salman Alparisi", kta: "0016", password: "salman456" },
     { username: "HASAN AL AHWARI", kta: "0051", password: "hasan234" },
     { username: "Agil Pramono", kta: "0065", password: "agil678" },
     { username: "Ridho Ariotama Adi Danuarta", kta: "0086", password: "ridho789" },
