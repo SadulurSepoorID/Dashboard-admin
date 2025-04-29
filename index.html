@@ -20,6 +20,12 @@
       flex-direction: column;
     }
 
+    #content {
+      visibility: hidden; /* Sembunyikan seluruh konten awal */
+      opacity: 0;
+      transition: visibility 0s, opacity 0.5s ease;
+    }
+
     header {
       background-color: #007bff;
       color: white;
@@ -99,28 +105,42 @@
     <button class="logout-btn" onclick="logout()">Logout</button>
   </header>
 
-  <main>
-    <h2>Dashboard Admin</h2>
+  <main id="content">
+    <h2>Halaman yang bisa diedit</h2>
     <div class="grid">
       <div class="card">
-        <h3>Absensi</h3>
-        <a href="absen.html">Edit Absen</a>
+        <h3>Absen</h3>
+        <a href="Absen.html">Edit Absen</a>
       </div>
     </div>
   </main>
 
   <script>
+    // Cek status login lebih awal
     const adminName = sessionStorage.getItem('adminName');
     if (!adminName) {
       window.location.href = 'loginadmin.html';
     } else {
       document.getElementById('adminName').textContent = adminName;
+      document.getElementById('content').style.visibility = 'visible';
+      document.getElementById('content').style.opacity = '1';
     }
 
+    // Fungsi untuk logout
     function logout() {
-      sessionStorage.clear();
+      // Hapus sessionStorage
+      sessionStorage.clear(); // Menghapus semua data session
+      // Redirect ke halaman login
       window.location.href = 'loginadmin.html';
     }
+
+    // Pastikan jika back button ditekan, login harus dipaksa
+    window.onpageshow = function(event) {
+      if (event.persisted) { // Untuk browser yang mendukung page cache
+        sessionStorage.clear(); // Hapus sessionStorage
+        window.location.href = 'loginadmin.html'; // Redirect ke halaman login
+      }
+    };
   </script>
 </body>
 </html>
