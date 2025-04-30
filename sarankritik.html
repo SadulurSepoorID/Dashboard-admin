@@ -158,15 +158,19 @@
     }
 
     function hapusData(id) {
-      if (confirm("Yakin ingin menghapus data ini?")) {
-        fetch(`${scriptURL}?id=${id}`, { method: "DELETE" })
-          .then(res => res.json())
-          .then(() => {
-            alert("Data berhasil dihapus.");
-            fetchData();
-          });
-      }
-    }
+  if (confirm("Yakin ingin menghapus data ini?")) {
+    const url = `${scriptURL}?mode=delete&id=${id}&t=${Date.now()}`; // tambahkan timestamp
+    fetch(url)
+      .then(res => res.json())
+      .then(() => {
+        alert("Data berhasil dihapus.");
+        fetchData();
+      })
+      .catch(() => {
+        alert("Gagal menghapus data. Periksa koneksi atau Script Apps.");
+      });
+  }
+}
 
     window.onload = fetchData;
   </script>
