@@ -112,11 +112,11 @@
     }
 
     canvas {
-  width: 100% !important;
-  max-width: 700px;
-  margin: 0 auto;
-  display: block;
-}
+      width: 100% !important;
+      max-width: 700px;
+      margin: 0 auto;
+      display: block;
+    }
 
     .menu-toggle {
       display: none;
@@ -138,12 +138,12 @@
 
     /* Responsive */
     @media (max-width: 768px) {
-  canvas {
-    max-width: 80%;
-    margin: 0 auto;
-    display: block;
-    max-width: 95% !important;
-  }
+      canvas {
+        max-width: 80%;
+        margin: 0 auto;
+        display: block;
+        max-width: 95% !important;
+      }
       .sidebar {
         transform: translateX(-100%);
       }
@@ -183,35 +183,35 @@
       <h1>Halo, <span id="adminName">Admin</span>!</h1>
       <button class="logout-btn" onclick="logout()">Logout</button>
     </header>
-<h3>*Refresh Setiap Saat</h3><br>
+    <h3>*Refresh Setiap Saat</h3><br>
+
     <section class="stats">
-<div class="card" id="kehadiranCard">
-  <h3 id="judulKehadiran">Total Kehadiran</h3>
-  <p id="jumlahKehadiran" style="font-size: 2rem;">0</p>
-</div>
-<div class="card" id="kegiatanCard">
-  <h3>Kegiatan Tahun 2025</h3>
-  <p style="font-size: 1.2rem;">Program: 15</p>
-  <p style="font-size: 1.2rem;" id="terlaksanaCount">Terlaksana: menghitung...</p>
-</div>
+      <div class="card" id="kehadiranCard">
+        <h3 id="judulKehadiran">Total Kehadiran</h3>
+        <p id="jumlahKehadiran" style="font-size: 2rem;">0</p>
+      </div>
+      <div class="card" id="kegiatanCard">
+        <h3>Kegiatan Tahun 2025</h3>
+        <p style="font-size: 1.2rem;">Program: 15</p>
+        <p style="font-size: 1.2rem;" id="terlaksanaCount">Terlaksana: menghitung...</p>
+      </div>
       <div class="card">
         <h3>Total Anggota Aktif</h3>
         <p style="font-size: 2rem;">85</p>
       </div>
     </section>
 
-    <!-- Di dalam <body>, letakkan ini di bawah judul -->
-<section>
-  <h2 style="margin-bottom: 1rem;">Grafik Kehadiran Bulanan</h2>
-  <div class="chart-container">
-    <canvas id="attendanceChart"></canvas>
-  </div>
+    <section>
+      <h2 style="margin-bottom: 1rem;">Grafik Kehadiran Bulanan</h2>
+      <div class="chart-container">
+        <canvas id="attendanceChart"></canvas>
+      </div>
 
-  <h2 style="margin-top: 2rem;">Grafik Kehadiran per Kegiatan</h2>
-  <div class="chart-container">
-    <canvas id="kegiatanChart"></canvas>
-  </div>
-</section>
+      <h2 style="margin-top: 2rem;">Grafik Kehadiran per Kegiatan</h2>
+      <div class="chart-container">
+        <canvas id="kegiatanChart"></canvas>
+      </div>
+    </section>
   </div>
 
 <script>
@@ -229,35 +229,44 @@
     }
   }
 
-// Atur tema saat halaman pertama kali dimuat
-const savedTheme = localStorage.getItem('theme') || 'light';
-root.setAttribute('data-theme', savedTheme);
-themeIcon.textContent = savedTheme === 'dark' ? '🌕' : '🌑';
+  const savedTheme = localStorage.getItem('theme') || 'light';
+  root.setAttribute('data-theme', savedTheme);
+  themeIcon.textContent = savedTheme === 'dark' ? '🌕' : '🌑';
 
   function toggleTheme() {
-  const currentTheme = root.getAttribute('data-theme');
-  const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-  root.setAttribute('data-theme', newTheme);
-  themeIcon.textContent = newTheme === 'dark' ? '🌕' : '🌑';
-  localStorage.setItem('theme', newTheme); // Simpan ke localStorage
-}
-
-  const adminName = sessionStorage.getItem('adminName');
-  if (!adminName) {
-    window.location.href = 'loginadmin.html';
-  } else {
-    document.getElementById('adminName').textContent = adminName;
+    const currentTheme = root.getAttribute('data-theme');
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    root.setAttribute('data-theme', newTheme);
+    themeIcon.textContent = newTheme === 'dark' ? '🌕' : '🌑';
+    localStorage.setItem('theme', newTheme);
   }
+
+  function cekSession() {
+    const adminName = sessionStorage.getItem('adminName');
+    if (!adminName) {
+      sessionStorage.clear();
+      window.location.replace('loginadmin.html');
+    } else {
+      document.getElementById('adminName').textContent = adminName;
+    }
+  }
+
+  cekSession();
 
   function logout() {
     sessionStorage.clear();
-    window.location.href = 'loginadmin.html';
+    window.location.replace('loginadmin.html');
+  }
+
+  if (window.performance && window.performance.navigation.type === window.performance.navigation.TYPE_BACK_FORWARD) {
+    sessionStorage.clear();
+    window.location.replace('loginadmin.html');
   }
 
   window.onpageshow = function(event) {
     if (event.persisted) {
       sessionStorage.clear();
-      window.location.href = 'loginadmin.html';
+      window.location.replace('loginadmin.html');
     }
   };
 
