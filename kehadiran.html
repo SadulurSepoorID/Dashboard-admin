@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Absensi</title>
+  <style>
+    :root {
+      --primary: #007bff;
+      --secondary: #e9f2ff;
+      --text: #333;
+      --bg: #ffffff;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background-color: var(--bg);
+      color: var(--text);
+      padding: 20px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    header h1 {
+      font-size: 24px;
+      color: var(--primary);
+    }
+
+    a.back-btn {
+      text-decoration: none;
+      background-color: var(--primary);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 8px;
+      transition: background 0.3s;
+    }
+
+    a.back-btn:hover {
+      background-color: #0056b3;
+    }
+
+    .search-section {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 30px;
+    }
+
+    .search-section input,
+    .search-section select,
+    .search-section button {
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    .search-section button {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    .search-section button:hover {
+      background-color: #0056b3;
+    }
+
+    .card {
+      background-color: #f9f9ff;
+      border: 1px solid #cce0ff;
+      border-left: 5px solid #3399ff;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+    .card h3 {
+      color: #003366;
+      margin-top: 0;
+    }
+
+    .card h4 {
+      margin: 10px 0 5px;
+      color: #004080;
+    }
+
+    .card ul {
+      margin: 0 0 10px 20px;
+    }
+
+    .table-container {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background: var(--secondary);
+    }
+
+    th, td {
+      padding: 12px 15px;
+      border-bottom: 1px solid #ddd;
+      text-align: left;
+    }
+
+    th {
+      background-color: var(--primary);
+      color: white;
+    }
+
+    .btn-group {
+      margin: 10px 0;
+    }
+
+    .btn-group button {
+      padding: 8px 14px;
+      margin-right: 8px;
+      border: none;
+      border-radius: 5px;
+      background-color: var(--secondary);
+      color: var(--text);
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .btn-group button:hover {
+      background-color: var(--primary);
+      color: white;
+    }
+
+    @media (max-width: 600px) {
+      .search-section {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Admin Absensi</h1>
+    <a href="index.html" class="back-btn">Kembali</a>
+  </header>
+
+  <section class="search-section">
+    <input type="text" id="searchInput" placeholder="Cari...">
+    <select id="searchType">
+      <option value="anggota">Cari Berdasarkan Anggota</option>
+      <option value="kegiatan">Cari Berdasarkan Kegiatan/Lokasi</option>
+    </select>
+    <button onclick="handleSearch()">Cari</button>
+  </section>
+
+  <section class="result-section" id="resultContainer"></section>
+
+  <script>
+    let absensiData = [];
+
+    fetch('data.json')
+      .then(res => res.json())
+      .then(data => absensiData = data)
+      .catch(err => console.error('Gagal memuat data:', err));
+
+    function handleSearch() {
+      const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
+      const type = document.getElementById('searchType').value;
+      const result = document.getElementById('resultContainer');
+      result.innerHTML = '';
+
+      if (!keyword) {
+        result.innerHTML = '<p style="color:red;">Masukkan kata kunci pencarian.</p>';
+        return;
+      }
+
+      if (type === 'anggota') {
+        const anggotaMap = new Map();
+
+        absensiData.forEach(event => {
+          event.absensi.forEach(a => {
+            if (a.nama.toLowerCase().includes(keyword)) {
+              if (!anggotaMap.has(a.nama)) {
+                anggotaMap.set(a.nama, { Hadir: [], Izin: [], Alpa: [] });
+              }
+              anggotaMap.get(a.nama)[a.status].push(`${event.namaKegiatan} (${event.tanggal})`);
+            }
+          });
+        });
+
+        if (anggotaMap.size === 0) {
+          result.innerHTML = '<p style="color:red;">Nama tidak ditemukan.</p>';
+          return;
+        }
+
+        let html = '';
+        anggotaMap.forEach((statusList, nama) => {
+          const totalHadir = statusList.Hadir.length;
+          const totalIzin = statusList.Izin.length;
+          const totalAlpa = statusList.Alpa.length;
+
+          html += `
+            <div class="card">
+              <h3>${nama}</h3>
+              <p><strong>Total:</strong> Hadir (${totalHadir}), Izin (${totalIzin}), Alpa (${totalAlpa})</p>
+              
+              <div>
+                <h4>Hadir:</h4>
+                <ul>${statusList.Hadir.map(item => `<li>${item}</li>`).join('') || '<li>-</li>'}</ul>
+              </div>
+              <div>
+                <h4>Izin:</h4>
+                <ul>${statusList.Izin.map(item => `<li>${item}</li>`).join('') || '<li>-</li>'}</ul>
+              </div>
+              <div>
+                <h4>Alpa:</h4>
+                <ul>${statusList.Alpa.map(item => `<li>${item}</li>`).join('') || '<li>-</li>'}</ul>
+              </div>
+            </div>
+          `;
+        });
+
+        result.innerHTML = html;
+      } else {
+        const kegiatan = absensiData.find(event =>
+          event.namaKegiatan.toLowerCase().includes(keyword) ||
+          event.lokasi.toLowerCase().includes(keyword)
+        );
+
+        if (!kegiatan) {
+          result.innerHTML = '<p style="color:red;">Kegiatan atau lokasi tidak ditemukan.</p>';
+          return;
+        }
+
+        const tableRows = kegiatan.absensi.map((a, i) => `
+          <tr>
+            <td>${i + 1}</td>
+            <td>${a.nama}</td>
+            <td>${a.status}</td>
+          </tr>
+        `).join('');
+
+        result.innerHTML = `
+          <h3>Detail Kegiatan</h3>
+          <p><strong>Kegiatan:</strong> ${kegiatan.namaKegiatan}</p>
+          <p><strong>Lokasi:</strong> ${kegiatan.lokasi}</p>
+          <p><strong>Tanggal:</strong> ${kegiatan.tanggal}</p>
+
+          <div class="btn-group">
+            <button onclick="filterTable('All')">Semua</button>
+            <button onclick="filterTable('Hadir')">Hadir</button>
+            <button onclick="filterTable('Izin')">Izin</button>
+            <button onclick="filterTable('Alpa')">Alpa</button>
+          </div>
+
+          <div class="table-container">
+            <table id="absenTable">
+              <thead>
+                <tr>
+                  <th>No</th>
+                  <th>Nama</th>
+                  <th>Keterangan</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${tableRows}
+              </tbody>
+            </table>
+          </div>
+        `;
+      }
+    }
+
+    function filterTable(status) {
+      const rows = document.querySelectorAll('#absenTable tbody tr');
+      rows.forEach(row => {
+        const ket = row.cells[2].textContent;
+        row.style.display = (status === 'All' || ket === status) ? '' : 'none';
+      });
+    }
+  </script>
+</body>
+</html>

@@ -4,151 +4,415 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Dashboard Admin</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
+    :root {
+      --bg-color: #f4f6f8;
+      --text-color: #333;
+      --card-bg: white;
+      --sidebar-bg: #007bff;
+    }
+
+    [data-theme="dark"] {
+      --bg-color: #1c1e26;
+      --text-color: #eee;
+      --card-bg: #2c2f3a;
+      --sidebar-bg: #111;
+    }
+
     * {
       box-sizing: border-box;
       font-family: 'Segoe UI', sans-serif;
       margin: 0;
       padding: 0;
+      transition: background-color 0.3s, color 0.3s;
     }
 
     body {
-      background-color: #f3faff;
-      color: #333;
-      min-height: 100vh;
+      background-color: var(--bg-color);
+      color: var(--text-color);
       display: flex;
-      flex-direction: column;
+      min-height: 100vh;
     }
 
-    #content {
-      visibility: hidden; /* Sembunyikan seluruh konten awal */
-      opacity: 0;
-      transition: visibility 0s, opacity 0.5s ease;
+    .sidebar {
+      width: 220px;
+      background-color: var(--sidebar-bg);
+      color: white;
+      padding: 2rem 1rem;
+      position: fixed;
+      height: 100%;
+      top: 0;
+      left: 0;
+      transform: translateX(0);
+      transition: transform 0.3s ease;
+      z-index: 1000;
+    }
+
+    .sidebar h2 {
+      margin-bottom: 2rem;
+      font-size: 1.3rem;
+      text-align: center;
+    }
+
+    .nav-link {
+      display: block;
+      padding: 0.75rem 1rem;
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      margin-bottom: 0.5rem;
+    }
+
+    .nav-link:hover {
+      background-color: rgba(255,255,255,0.2);
+    }
+
+    .main-content {
+      margin-left: 220px;
+      flex: 1;
+      padding: 2rem;
+      width: 100%;
+      transition: margin-left 0.3s ease;
     }
 
     header {
-      background-color: #007bff;
-      color: white;
-      padding: 1rem 2rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
-    }
-
-    header h1 {
-      font-size: 1.5rem;
+      margin-bottom: 2rem;
     }
 
     .logout-btn {
-      background: white;
-      color: #007bff;
+      background: #ff4d4f;
+      color: white;
       border: none;
       padding: 0.5rem 1rem;
       border-radius: 8px;
       cursor: pointer;
-      font-weight: bold;
     }
 
     .logout-btn:hover {
-      background-color: #e6e6e6;
+      background-color: #e60000;
     }
 
-    main {
-      flex: 1;
-      padding: 2rem;
-    }
-
-    .grid {
+    .stats {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 1.5rem;
-      margin-top: 2rem;
+      margin-bottom: 2rem;
     }
 
     .card {
-      background: white;
-      border: 1px solid #ddd;
+      background: var(--card-bg);
       padding: 1.5rem;
       border-radius: 12px;
-      text-align: center;
       box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-      transition: transform 0.2s ease;
+      text-align: center;
     }
 
-    .card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    canvas {
+  width: 100% !important;
+  max-width: 700px;
+  margin: 0 auto;
+  display: block;
+}
+
+    .menu-toggle {
+      display: none;
+      background: none;
+      border: none;
+      font-size: 1.8rem;
+      cursor: pointer;
+      color: var(--text-color);
+      margin-right: 1rem;
     }
 
-    .card a {
-      text-decoration: none;
-      color: #007bff;
-      font-weight: bold;
-      display: block;
-      margin-top: 0.5rem;
+    .toggle-mode {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      margin-right: 1rem;
     }
 
-    @media (max-width: 600px) {
-      header h1 {
-        font-size: 1.2rem;
+    /* Responsive */
+    @media (max-width: 768px) {
+  canvas {
+    max-width: 80%;
+    margin: 0 auto;
+    display: block;
+    max-width: 95% !important;
+  }
+      .sidebar {
+        transform: translateX(-100%);
       }
 
-      .card {
+      .sidebar.active {
+        transform: translateX(0);
+      }
+
+      .main-content {
+        margin-left: 0;
         padding: 1rem;
+      }
+
+      .menu-toggle {
+        display: inline-block;
       }
     }
   </style>
 </head>
-<body>
-  <header>
-    <h1>Selamat datang, <span id="adminName">Admin</span>!</h1>
-    <button class="logout-btn" onclick="logout()">Logout</button>
-  </header>
+<body data-theme="light">
+  <div class="sidebar" id="sidebar">
+    <h2>Admin Panel</h2>
+    <a href="#" class="nav-link" onclick="closeSidebar()">Kembali</a>
+    <a href="kehadiran.html" class="nav-link" onclick="closeSidebar()">Kehadiran Anggota</a>
+    <a href="absen.html" class="nav-link" onclick="closeSidebar()">Edit Absen</a>
+    <a href="izin.html" class="nav-link" onclick="closeSidebar()">Edit Izin</a>
+    <a href="sensus.html" class="nav-link" onclick="closeSidebar()">Edit Sensus</a>
+    <a href="#" class="nav-link" onclick="logout()">Logout</a>
+  </div>
 
-  <main id="content">
-    <h2>Dashboard Admin</h2>
-    <div class="grid">
-      <div class="card">
-        <h3>Absen</h3>
-        <a href="absen.html">Edit Absen</a>
+  <div class="main-content">
+    <header>
+      <div>
+        <button class="menu-toggle" onclick="toggleSidebar()">&#9776;</button>
+        <button class="toggle-mode" id="themeIcon" onclick="toggleTheme()">🌑</button>
       </div>
+      <h1>Halo, <span id="adminName">Admin</span>!</h1>
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </header>
+<h3>*Refresh Setiap Saat</h3><br>
+    <section class="stats">
+<div class="card" id="kehadiranCard">
+  <h3 id="judulKehadiran">Total Kehadiran</h3>
+  <p id="jumlahKehadiran" style="font-size: 2rem;">0</p>
+</div>
+<div class="card" id="kegiatanCard">
+  <h3>Kegiatan Tahun 2025</h3>
+  <p style="font-size: 1.2rem;">Program: 15</p>
+  <p style="font-size: 1.2rem;" id="terlaksanaCount">Terlaksana: menghitung...</p>
+</div>
       <div class="card">
-        <h3>Izin Tidak Hadir</h3>
-        <a href="izin.html">Edit Izin</a>
+        <h3>Total Anggota Aktif</h3>
+        <p style="font-size: 2rem;">85</p>
       </div>
-      <div class="card">
-        <h3>Sensus Kereta</h3>
-        <a href="sensus.html">Edit Sensus</a>
-      </div>
-    </div>
-  </main>
+    </section>
 
-  <script>
-    // Cek status login lebih awal
-    const adminName = sessionStorage.getItem('adminName');
-    if (!adminName) {
-      window.location.href = 'loginadmin.html';
-    } else {
-      document.getElementById('adminName').textContent = adminName;
-      document.getElementById('content').style.visibility = 'visible';
-      document.getElementById('content').style.opacity = '1';
+    <!-- Di dalam <body>, letakkan ini di bawah judul -->
+<section>
+  <h2 style="margin-bottom: 1rem;">Grafik Kehadiran Bulanan</h2>
+  <div class="chart-container">
+    <canvas id="attendanceChart"></canvas>
+  </div>
+
+  <h2 style="margin-top: 2rem;">Grafik Kehadiran per Kegiatan</h2>
+  <div class="chart-container">
+    <canvas id="kegiatanChart"></canvas>
+  </div>
+</section>
+  </div>
+
+<script>
+  const sidebar = document.getElementById('sidebar');
+  const root = document.body;
+  const themeIcon = document.getElementById('themeIcon');
+
+  function toggleSidebar() {
+    sidebar.classList.toggle('active');
+  }
+
+  function closeSidebar() {
+    if (window.innerWidth <= 768) {
+      sidebar.classList.remove('active');
     }
+  }
 
-    // Fungsi untuk logout
-    function logout() {
-      // Hapus sessionStorage
-      sessionStorage.clear(); // Menghapus semua data session
-      // Redirect ke halaman login
+// Atur tema saat halaman pertama kali dimuat
+const savedTheme = localStorage.getItem('theme') || 'light';
+root.setAttribute('data-theme', savedTheme);
+themeIcon.textContent = savedTheme === 'dark' ? '🌕' : '🌑';
+
+  function toggleTheme() {
+  const currentTheme = root.getAttribute('data-theme');
+  const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+  root.setAttribute('data-theme', newTheme);
+  themeIcon.textContent = newTheme === 'dark' ? '🌕' : '🌑';
+  localStorage.setItem('theme', newTheme); // Simpan ke localStorage
+}
+
+  const adminName = sessionStorage.getItem('adminName');
+  if (!adminName) {
+    window.location.href = 'loginadmin.html';
+  } else {
+    document.getElementById('adminName').textContent = adminName;
+  }
+
+  function logout() {
+    sessionStorage.clear();
+    window.location.href = 'loginadmin.html';
+  }
+
+  window.onpageshow = function(event) {
+    if (event.persisted) {
+      sessionStorage.clear();
       window.location.href = 'loginadmin.html';
     }
+  };
 
-    // Pastikan jika back button ditekan, login harus dipaksa
-    window.onpageshow = function(event) {
-      if (event.persisted) { // Untuk browser yang mendukung page cache
-        sessionStorage.clear(); // Hapus sessionStorage
-        window.location.href = 'loginadmin.html'; // Redirect ke halaman login
+  async function loadAttendanceData() {
+    const response = await fetch('data.json');
+    const data = await response.json();
+    const monthlySummary = {};
+
+    data.forEach(kegiatan => {
+      const bulan = kegiatan.tanggal.slice(0, 7);
+      if (!monthlySummary[bulan]) {
+        monthlySummary[bulan] = { Hadir: 0, Izin: 0, Alpa: 0 };
       }
-    };
-  </script>
+      kegiatan.absensi.forEach(absen => {
+        if (absen.status === 'Hadir') monthlySummary[bulan].Hadir++;
+        else if (absen.status === 'Izin') monthlySummary[bulan].Izin++;
+        else monthlySummary[bulan].Alpa++;
+      });
+    });
+
+    const labels = Object.keys(monthlySummary);
+    const hadir = labels.map(bulan => monthlySummary[bulan].Hadir);
+    const izin = labels.map(bulan => monthlySummary[bulan].Izin);
+    const alpa = labels.map(bulan => monthlySummary[bulan].Alpa);
+
+    renderMonthlyChart(labels, hadir, izin, alpa);
+  }
+
+  function renderMonthlyChart(labels, hadir, izin, alpa) {
+    const ctx = document.getElementById('attendanceChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [
+          { label: 'Hadir', data: hadir, backgroundColor: '#4caf50' },
+          { label: 'Izin', data: izin, backgroundColor: '#ff9800' },
+          { label: 'Alpa', data: alpa, backgroundColor: '#f44336' }
+        ]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          title: {
+            display: true,
+            text: 'Rekap Kehadiran Bulanan'
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: { precision: 0 }
+          }
+        }
+      }
+    });
+  }
+
+  async function renderChartPerKegiatan() {
+    const res = await fetch('data.json');
+    const data = await res.json();
+
+    const labels = data.map(k => {
+      const tanggal = new Date(k.tanggal);
+      return tanggal.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' });
+    });
+
+    const hadir = data.map(k => (k.absensi || []).filter(a => a.status === "Hadir").length);
+    const izin = data.map(k => (k.absensi || []).filter(a => a.status === "Izin").length);
+    const alpa = data.map(k => (k.absensi || []).filter(a => a.status === "Alpa").length);
+
+    const ctx2 = document.getElementById('kegiatanChart').getContext('2d');
+    new Chart(ctx2, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          { label: 'Hadir', data: hadir, backgroundColor: '#4caf50' },
+          { label: 'Izin', data: izin, backgroundColor: '#ff9800' },
+          { label: 'Alpa', data: alpa, backgroundColor: '#f44336' }
+        ]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          title: {
+            display: true,
+            text: 'Kehadiran Berdasarkan Tanggal Kegiatan'
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: { precision: 0 }
+          }
+        }
+      }
+    });
+  }
+
+  loadAttendanceData();
+  renderChartPerKegiatan();
+
+  fetch('data.json')
+    .then(res => res.json())
+    .then(data => {
+      const tahunTarget = 2025;
+      const kegiatanTahunIni = data.filter(item => {
+        const tanggal = new Date(item.tanggal);
+        return tanggal.getFullYear() === tahunTarget && item.namaKegiatan;
+      });
+      document.getElementById('terlaksanaCount').textContent = `Terlaksana: ${kegiatanTahunIni.length}`;
+    })
+    .catch(error => {
+      console.error("Gagal memuat data.json:", error);
+      document.getElementById('terlaksanaCount').textContent = "Terlaksana: -";
+    });
+
+  fetch('data.json')
+    .then(res => res.json())
+    .then(data => {
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+
+      let kegiatanAktual = null;
+
+      for (const item of data) {
+        const tgl = new Date(item.tanggal);
+        tgl.setHours(0, 0, 0, 0);
+        const diffHari = Math.floor((tgl - now) / (1000 * 60 * 60 * 24));
+
+        if (diffHari >= -1 && diffHari <= 7) {
+          kegiatanAktual = item;
+          break;
+        }
+      }
+
+      const judul = document.getElementById('judulKehadiran');
+      const jumlah = document.getElementById('jumlahKehadiran');
+
+      if (kegiatanAktual) {
+        const jumlahHadir = (kegiatanAktual.absensi || []).filter(a => a.status === "Hadir").length;
+        const lokasi = kegiatanAktual.lokasi || 'Lokasi Tidak Diketahui';
+        judul.textContent = `Total Kehadiran ${lokasi}`;
+        jumlah.textContent = jumlahHadir;
+      } else {
+        judul.textContent = 'Tidak ada kegiatan';
+        jumlah.textContent = '(H-7)';
+      }
+    })
+    .catch(err => {
+      console.error('Gagal memuat data.json:', err);
+      document.getElementById('judulKehadiran').textContent = 'Tidak ada kegiatan';
+      document.getElementById('jumlahKehadiran').textContent = '(H-7)';
+    });
+</script>
 </body>
 </html>
