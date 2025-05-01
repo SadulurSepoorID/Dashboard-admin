@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin & Member Tools</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #ffffff;
+      color: #003366;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background: #3366cc;
+      color: #fff;
+      padding: 10px;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: auto;
+      padding: 30px 20px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #003399;
+      margin-bottom: 40px;
+    }
+
+    .box {
+      background: #e6f0ff;
+      border-left: 6px solid #3366cc;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .box h2 {
+      margin-bottom: 15px;
+    }
+
+    input[type="text"],
+    input[type="file"] {
+      width: 100%;
+      padding: 10px 1px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    button {
+      background: #3366cc;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      font-weight: bold;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #254a99;
+    }
+
+    #qrcode img {
+      margin-top: 15px;
+    }
+
+    #imgPreview img {
+      max-height: 150px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+
+    .action-buttons {
+      margin-top: 10px;
+    }
+
+    .action-buttons button {
+      margin-right: 10px;
+    }
+
+    .copy-btn {
+      background: #28a745;
+    }
+
+    .copy-btn:hover {
+      background: #218838;
+    }
+
+    .back-btn {
+  background: #ffffff;
+  color: #0000d2;
+  margin: 30px auto;
+  padding: 10px 20px;
+  border: 2px solid #0000d2;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.back-btn:hover {
+  background: #f0f0f0;
+}
+
+#qrContainer {
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  display: inline-block;
+  margin-top: 20px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+#customAlert {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  background: #ffffff;
+  border: 2px solid #3366cc;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  padding: 20px 30px;
+  color: #003366;
+  font-weight: 600;
+  animation: slideDown 0.3s ease;
+}
+
+#customAlert .alert-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+
+#customAlert button {
+  background: #3366cc;
+  color: white;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+#customAlert button:hover {
+  background: #254a99;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translate(-50%, -20px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
+</head>
+<body>
+
+  <!-- Tombol Kembali -->
+  <div style="text-align: center;">
+    <button class="back-btn" onclick="window.location.href='index.html'">Kembali</button>
+  </div>
+
+  <div class="container">
+    <h1>Admin & Member Tools</h1>
+
+    <!-- QR Code Generator -->
+    <section class="box">
+      <h2>1. QR Code Generator</h2>
+      <input id="qrUrl" type="text" placeholder="Masukkan URL..."/>
+      <button onclick="generateQR()">Buat QR</button>
+      <div id="qrContainer" style="display:none;">
+  <div id="qrcode"></div>
+</div>
+    </section>
+
+    <!-- Image to URL Converter -->
+    <section class="box">
+      <h2>2. Gambar ke URL</h2>
+      <input type="file" id="imgInput" />
+      <div id="imgPreview"></div>
+      <input type="text" id="imgUrl" readonly />
+      <button id="copyImageUrl" class="copy-btn" style="display:none" onclick="copyImageUrl()">Salin URL Gambar</button>
+    </section>
+
+    <!-- WhatsApp Link Generator -->
+    <section class="box">
+      <h2>3. Link WhatsApp</h2>
+      <input id="waNumber" type="text" placeholder="Nomor WhatsApp (contoh: 082112964343)" />
+      <input id="waMessage" type="text" placeholder="Pesan (opsional)" />
+      <button onclick="generateWaLink()">Buat Link</button>
+      <input id="waResult" type="text" readonly />
+      <button id="copyWaLink" class="copy-btn" style="display:none" onclick="copyWaLink()">Salin Link</button>
+    </section>
+  </div>
+
+  <script>
+    let qrCodeImgUrl = "";
+
+    function generateQR() {
+  const url = document.getElementById("qrUrl").value;
+  document.getElementById("qrcode").innerHTML = "";
+  if (url) {
+    document.getElementById("qrContainer").style.display = "block";
+    const qr = new QRCode("qrcode", {
+      text: url,
+      width: 200,
+      height: 200,
+      colorDark: "#000",
+      colorLight: "#fff",
+      correctLevel: QRCode.CorrectLevel.H,
+    });
+
+    setTimeout(() => {
+      const qrImg = document.querySelector("#qrcode img");
+      const logo = document.createElement("img");
+      logo.src = "https://i.imgur.com/98cxNgl.jpeg";
+      logo.style.position = "absolute";
+      logo.style.width = "40px";
+      logo.style.top = "80px";
+      logo.style.left = "80px";
+      logo.style.borderRadius = "50%";
+      qrImg.parentElement.style.position = "relative";
+      qrImg.parentElement.appendChild(logo);
+
+      qrCodeImgUrl = qrImg.src;
+      document.getElementById("downloadBtn").style.display = "inline-block";
+      document.getElementById("openBtn").style.display = "inline-block";
+      document.getElementById("copyQRCode").style.display = "inline-block";
+    }, 300);
+  }
+}
+
+    document.getElementById("imgInput").addEventListener("change", function () {
+      const file = this.files[0];
+      if (file) {
+        const url = URL.createObjectURL(file);
+        document.getElementById("imgPreview").innerHTML = `<img src="${url}" alt="Preview">`;
+        document.getElementById("imgUrl").value = url;
+        document.getElementById("copyImageUrl").style.display = "inline-block";
+      }
+    });
+
+    function copyImageUrl() {
+      const imgUrl = document.getElementById("imgUrl").value;
+      const textArea = document.createElement("textarea");
+      textArea.value = imgUrl;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textArea);
+      showAlert("URL Gambar telah disalin!");
+    }
+
+    function generateWaLink() {
+      let number = document.getElementById("waNumber").value.trim();
+      const message = document.getElementById("waMessage").value;
+      number = number.replace(/\D/g, ''); // Hapus semua karakter non-digit
+      if (number.startsWith("0")) {
+        number = "62" + number.substring(1); // Ganti angka 0 dengan kode negara Indonesia
+      } else if (number.startsWith("+62")) {
+        number = number.substring(1); // Hapus tanda "+" jika ada
+      }
+      if (!number) return showAlert("Nomor tidak valid!");
+
+      let link = `https://wa.me/${number}`;
+      if (message) {
+        link += `?text=${encodeURIComponent(message)}`;
+      }
+      document.getElementById("waResult").value = link;
+      document.getElementById("copyWaLink").style.display = "inline-block";
+    }
+
+    function copyWaLink() {
+      const waLink = document.getElementById("waResult").value;
+      const textArea = document.createElement("textarea");
+      textArea.value = waLink;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textArea);
+      showAlert("Link WhatsApp telah disalin!");
+    }
+    
+    function showAlert(message) {
+  document.getElementById("alertMessage").textContent = message;
+  document.getElementById("customAlert").style.display = "block";
+  setTimeout(() => {
+    closeAlert();
+  }, 4000); // Otomatis hilang dalam 4 detik
+}
+
+function closeAlert() {
+  document.getElementById("customAlert").style.display = "none";
+}
+  </script>
+  
+  <div id="customAlert" style="display:none;">
+  <div class="alert-box">
+    <p id="alertMessage"></p>
+    <button onclick="closeAlert()">Tutup</button>
+  </div>
+</div>
+</body>
+</html>
