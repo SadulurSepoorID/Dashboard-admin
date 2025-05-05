@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard Admin</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #2c3e50;
+    }
+    .back-btn {
+      background-color: #074fe8;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-bottom: 20px;
+      display: inline-block;
+      text-decoration: none;
+    }
+    .back-btn:hover {
+      background-color: #2980b9;
+    }
+    .search-box {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 15px;
+    }
+    .search-box input {
+      padding: 8px;
+      width: 100%;
+      max-width: 300px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .table-container {
+      overflow-x: auto;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 900px;
+    }
+    th, td {
+      padding: 12px 15px;
+      border-bottom: 1px solid #eee;
+      text-align: left;
+      vertical-align: middle;
+    }
+    th {
+      background-color: #074fe8;
+      color: white;
+    }
+    .btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-right: 5px;
+    }
+    .btn-approve {
+      background-color: #27ae60;
+      color: white;
+    }
+    .btn-cancel {
+      background-color: #e74c3c;
+      color: white;
+    }
+    /* Modal styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+    .modal-content {
+      background-color: #fff;
+      margin: 10% auto;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 400px;
+    }
+    .modal-content textarea {
+      width: 100%;
+      padding: 10px;
+      resize: vertical;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      min-height: 80px;
+    }
+    .modal-actions {
+      margin-top: 15px;
+      text-align: right;
+    }
+    .modal-actions button {
+      margin-left: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="index.html" class="back-btn">Kembali</a> <!-- Tombol Kembali -->
+    <h1>Dashboard Admin</h1>
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="Cari...">
+    </div>
+    <div class="table-container">
+      <table id="ordersTable">
+        <thead>
+          <tr>
+            <th>Timestamp</th>
+            <th>Nama</th>
+            <th>NIA</th>
+            <th>WhatsApp</th>
+            <th>Produk</th>
+            <th>Ukuran</th>
+            <th>Tipe</th>
+            <th>Metode Pembayaran</th>
+            <th>Total Harga</th>
+            <th>Bukti Pembayaran</th>
+            <th>Status</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div id="cancelModal" class="modal">
+    <div class="modal-content">
+      <h3>Alasan Pembatalan</h3>
+      <textarea id="cancelReason" placeholder="Masukkan alasan pembatalan..."></textarea>
+      <div class="modal-actions">
+        <button onclick="closeModal()">Kembali</button>
+        <button id="confirmCancel" class="btn btn-cancel">Lanjut</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbwz-1oM1thgkqjeUvzwlXzGK-p30vpOeqm6J7eLtFb4vqF1OvJk349skIqopV24hwHM/exec';
+    const tableBody = document.querySelector('#ordersTable tbody');
+    const searchInput = document.getElementById('searchInput');
+
+    let orders = [];
+    let currentCancel = null;
+
+    // Function to fetch orders from the API
+    async function fetchOrders() {
+        try {
+            const res = await fetch(`${API_URL}?action=getOrders`);
+            
+            // Log response status for debugging
+            console.log('Response Status:', res.status);  // Debugging response status
+            console.log('Response Headers:', res.headers);  // Debugging response headers
+
+            // Check if the response is OK
+            if (!res.ok) {
+                console.error('Failed to fetch data, status:', res.status);
+                alert('Failed to fetch data from server.');
+                return;
+            }
+
+            const data = await res.json();
+            console.log('Fetched data:', data);  // Debugging: check data
+            orders = data;
+            renderTable(orders);
+        } catch (error) {
+            console.error('Error during fetch:', error);
+            alert('An error occurred while fetching data.');
+        }
+    }
+
+    // Function to render table with data
+    function renderTable(data) {
+  tableBody.innerHTML = '';
+  data.forEach(order => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${new Date(order.timestamp).toLocaleString()}</td>
+      <td>${order.nama}</td>
+      <td>${order.nia}</td>
+      <td><a href="https://wa.me/${order.whatsapp}" target="_blank">${order.whatsapp}</a></td>
+      <td>${order.produk}</td>
+      <td>${order.ukuran}</td>
+      <td>${order.tipe}</td>
+      <td>${order.payment}</td>
+      <td>${order.totalPrice}</td>
+      <td>${order.buktiPembayaran ? `<a href="${order.buktiPembayaran}" target="_blank">Lihat</a>` : 'Tidak ada'}</td>
+      <td>${order.status}</td>
+      <td>
+        ${order.status === 'Belum Diproses' ? `
+          <button class="btn btn-approve" onclick="approveOrder(${order.id}, '${order.whatsapp}', '${order.produk}', '${order.tipe}')">Setuju</button>
+          <button class="btn btn-cancel" onclick="openModal(${order.id}, '${order.whatsapp}', '${order.produk}', '${order.tipe}')">Cancel</button>
+        ` : ''}
+      </td>
+    `;
+    tableBody.appendChild(tr);
+  });
+}
+
+    // Approve order
+    function approveOrder(id, phone, produk, tipe) {
+        fetch(API_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'updateStatus',
+                orderId: id,
+                status: 'Disetujui'
+            })
+        }).then(() => {
+            const msg = `Pesanan anda telah disetujui, harap menunggu untuk proses selanjutnya. Terimakasih.`;
+            window.open(`https://wa.me/${phone.replace(/^0/, '62')}?text=${encodeURIComponent(msg)}`, '_blank');
+            fetchOrders();
+        }).catch(error => {
+            console.error('Error during approval:', error);
+            alert('An error occurred while updating the order status.');
+        });
+    }
+
+    // Open the modal to input cancel reason
+    function openModal(id, phone, produk, tipe) {
+        currentCancel = { id, phone, produk, tipe };
+        document.getElementById('cancelModal').style.display = 'block';
+    }
+
+    // Close the modal
+    function closeModal() {
+        document.getElementById('cancelModal').style.display = 'none';
+        document.getElementById('cancelReason').value = '';
+    }
+
+    // Confirm the cancel action
+    document.getElementById('confirmCancel').addEventListener('click', () => {
+        const reason = document.getElementById('cancelReason').value.trim();
+        if (!reason) {
+            alert('Alasan pembatalan wajib diisi');
+            return;
+        }
+
+        fetch(API_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'updateStatus',
+                orderId: currentCancel.id,
+                status: 'Dibatalkan',
+                reason
+            })
+        }).then(() => {
+            const msg = `Pesanan ${currentCancel.produk} ${currentCancel.tipe} tidak bisa diproses, dengan alasan: ${reason}`;
+            window.open(`https://wa.me/${currentCancel.phone.replace(/^0/, '62')}?text=${encodeURIComponent(msg)}`, '_blank');
+            closeModal();
+            fetchOrders();
+        }).catch(error => {
+            console.error('Error during cancel:', error);
+            alert('An error occurred while cancelling the order.');
+        });
+    });
+
+    // Search functionality for table
+    searchInput.addEventListener('input', () => {
+        const val = searchInput.value.toLowerCase();
+        const filtered = orders.filter(o =>
+            Object.values(o).some(v => String(v).toLowerCase().includes(val))
+        );
+        renderTable(filtered);
+    });
+
+    // Initial fetch of orders
+    fetchOrders();
+</script>
+</body>
+</html>
