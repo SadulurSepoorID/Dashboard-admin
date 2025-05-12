@@ -163,7 +163,7 @@
   </div>
 
   <script>
-    const API_URL = 'https://script.google.com/macros/s/AKfycbwz-1oM1thgkqjeUvzwlXzGK-p30vpOeqm6J7eLtFb4vqF1OvJk349skIqopV24hwHM/exec';
+    const API_URL = 'https://script.google.com/macros/s/AKfycbxAYIrw3px-x50XKXnog_htuQCQE3jAaqGDGaadxlVesTo7Vd5yY7tYoTB6TPmQV-m-/exec';
     const tableBody = document.querySelector('#ordersTable tbody');
     const searchInput = document.getElementById('searchInput');
 
@@ -234,7 +234,7 @@
                 status: 'Disetujui'
             })
         }).then(() => {
-            const msg = `Pesanan anda telah disetujui, harap menunggu untuk proses selanjutnya. Terimakasih.`;
+            const msg = `Pembayaran anda telah disetujui, harap menunggu untuk proses selanjutnya. Terimakasih.`;
             window.open(`https://wa.me/${phone.replace(/^0/, '62')}?text=${encodeURIComponent(msg)}`, '_blank');
             fetchOrders();
         }).catch(error => {
@@ -272,7 +272,7 @@
                 reason
             })
         }).then(() => {
-            const msg = `Pesanan ${currentCancel.produk} ${currentCancel.tipe} tidak bisa diproses, dengan alasan: ${reason}`;
+            const msg = `Pembayaran ${currentCancel.produk} ${currentCancel.tipe} tidak bisa diproses, dengan alasan: ${reason}`;
             window.open(`https://wa.me/${currentCancel.phone.replace(/^0/, '62')}?text=${encodeURIComponent(msg)}`, '_blank');
             closeModal();
             fetchOrders();
