@@ -28,6 +28,7 @@
       padding: 20px;
       border-radius: 16px;
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
     }
 
     table {
@@ -76,6 +77,66 @@
       background-color: #dc3545;
     }
 
+    /* Tambahan Style untuk Scanner */
+    .scanner-container {
+      background: white;
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+    }
+
+    .scanner-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .scanner-header h3 {
+      margin: 0;
+      color: #2b7de9;
+    }
+
+    #reader {
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .scanner-toggle {
+      background-color: #2b7de9;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    #scanResult {
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .success {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .error {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    #scanResult {
+      display: none;
+    }
+
     @media (max-width: 600px) {
       table {
         font-size: 13px;
@@ -105,6 +166,18 @@
 </a>
 
   <h2>Dashboard Admin</h2>
+
+  <!-- Scanner Container -->
+  <div class="scanner-container">
+    <div class="scanner-header">
+      <h3>Scan Barcode</h3>
+      <button class="scanner-toggle" id="startScanner">Mulai Scan</button>
+    </div>
+    <div id="reader"></div>
+    <div id="scanResult"></div>
+  </div>
+
+  <!-- Table Container -->
   <div class="table-container">
     <table id="dataTable">
       <thead>
@@ -121,13 +194,20 @@
     </table>
   </div>
 
+  <!-- Script untuk HTML5-QRCode library -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
   <script>
     const scriptURL = "https://script.google.com/macros/s/AKfycbxXi1daPkKsg0OvjO-Ow0NlgqUBGlalWKTu8Y_PSQfdPslvq_Cw4TM5ffUleEoa32nv/exec";
+    let html5QrCode;
+    let dataRows = [];
 
+    // Fetch data function
     function fetchData() {
       fetch(`${scriptURL}?action=getAllData`)
         .then(res => res.json())
         .then(data => {
+          dataRows = data;
           const tbody = document.querySelector('#dataTable tbody');
           tbody.innerHTML = '';
           data.forEach((row, index) => {
@@ -153,7 +233,10 @@
       if (!status) return;
       fetch(`${scriptURL}?action=updateStatus&row=${row}&status=${encodeURIComponent(status)}`)
         .then(res => res.text())
-        .then(() => fetchData());
+        .then(() => {
+          fetchData();
+          showScanResult(`Status berhasil diubah menjadi "${status}"`, true);
+        });
     }
 
     function editStatus(row) {
@@ -169,7 +252,86 @@
       }
     }
 
-    fetchData(); // Load data saat halaman dibuka
+    // Function untuk mencari NIA dari hasil scan
+    function findUserByNIA(nia) {
+      for (let i = 0; i < dataRows.length; i++) {
+        if (dataRows[i][1] === nia) {
+          return { 
+            index: i,
+            row: i + 2, // +2 karena header dan index dimulai dari 0
+            data: dataRows[i]
+          };
+        }
+      }
+      return null;
+    }
+
+    // Function untuk menampilkan hasil scan
+    function showScanResult(message, isSuccess) {
+      const resultElement = document.getElementById('scanResult');
+      resultElement.textContent = message;
+      resultElement.className = isSuccess ? 'success' : 'error';
+      resultElement.style.display = 'block';
+      
+      // Sembunyikan pesan setelah 5 detik
+      setTimeout(() => {
+        resultElement.style.display = 'none';
+      }, 5000);
+    }
+
+    // Setup Scanner
+    document.getElementById('startScanner').addEventListener('click', function() {
+      const scannerButton = document.getElementById('startScanner');
+      
+      if (html5QrCode && html5QrCode.isScanning) {
+        html5QrCode.stop().then(() => {
+          scannerButton.textContent = 'Mulai Scan';
+          document.getElementById('reader').innerHTML = '';
+        });
+        return;
+      }
+
+      scannerButton.textContent = 'Berhenti Scan';
+      
+      html5QrCode = new Html5Qrcode("reader");
+      const qrConfig = { fps: 10, qrbox: { width: 250, height: 250 } };
+      
+      html5QrCode.start(
+        { facingMode: "environment" },
+        qrConfig,
+        onScanSuccess,
+        onScanError
+      );
+    });
+
+    // Callback ketika scan berhasil
+    function onScanSuccess(decodedText, decodedResult) {
+      // Berhenti scan setelah berhasil mendapatkan hasil
+      html5QrCode.stop();
+      document.getElementById('startScanner').textContent = 'Mulai Scan';
+      
+      // Proses hasil scan (diasumsikan hasil scan adalah NIA)
+      const scannedNIA = decodedText.trim();
+      const user = findUserByNIA(scannedNIA);
+      
+      if (user) {
+        showScanResult(`Ditemukan: ${user.data[0]} (NIA: ${scannedNIA})`, true);
+        
+        // Otomatis set status menjadi "Setuju"
+        setStatus(user.row, 'Setuju');
+      } else {
+        showScanResult(`NIA ${scannedNIA} tidak ditemukan dalam data`, false);
+      }
+    }
+
+    // Callback ketika ada error saat scan
+    function onScanError(errorMessage) {
+      // Handle error jika diperlukan (optional)
+      console.error(errorMessage);
+    }
+
+    // Load data saat halaman dibuka
+    fetchData();
   </script>
 </body>
 </html>
