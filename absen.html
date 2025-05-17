@@ -194,6 +194,9 @@
     </table>
   </div>
 
+  <!-- Audio elements for notifications -->
+  <audio id="successSound" src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.core.min.js" preload="auto"></audio>
+
   <!-- Script untuk HTML5-QRCode library -->
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
@@ -202,6 +205,9 @@
     let html5QrCode;
     let dataRows = [];
 
+    // Setup sounds
+    const successSound = new Audio("data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA/+M4wAAAAAAAAAAAAEluZm8AAAAPAAAABAAABVgANTU1NTU1Q0NDQ0NDUFBQUFBQXl5eXl5ebGxsbGxseXl5eXl5hoaGhoaGlJSUlJSUoaGhoaGhr6+vr6+vvb29vb29ysr/w8PDw9LS0tLS0uDg4ODg4O3t7e3t7fv7+/v7+/////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAAAAAAAAAAABVhUxJuR/+MYwEr8wWdolAKEllY46OcOTiqwi9cPJGzMUyDIDQFRuTdGWMRZqw0mAyJ0B8PwQUGwGQKhcKiwuF54kxKSc8PiYDuZeJgCo3iYAqNxU+JOTJ5UGszcb/7gmAyJwAYfggpvggpvgoJN//g4BMSYnwcE3BQSYn/+MYwD/9mG7cTCZAAsPioGTEpLG//EwHBMSYOCTAZB0Sjco8w1SaYXgMicrgn//8GA4KCbE+p//wYEwsLg+NiYjBMTa3/xULjgnFQfEw0f//Co2GQGQdxfDQTf/gweDAoDInJyciY///4KjYZIEYKBkXHxwTZW1Aj/+MYwCR8KFcEzAZE0QUC4qBxcHy4XH///7g4JiUlx8cEwsLCYXFQOKg+Y//XgoJgJ+XFxcTExMLD44JxUHxMNH//wqNhkBkHcXw0E3/4MHgwKAyJycnImP//+Co2GSBGCB+hAGRcfHBNlbW+2e/5YCO/qRJAYv/+MYwEf8SF7x3gZE0AHN4SIgIx7N94kRDTJdj//09PE6KcvEkICyXRxCQgcZ3///5YC2dDQxzf//+WAlnZcSEyCuQpnK22//////64EXtBICIaZLqRLRL//////rMyXvCQEDSJyIvb//5nC4n/+MYwGN92G7uXgZI8Ft+OPCDf8H//p+Q76UOYJQFgA0AGQCdwALGA5YI////1wzxzEBF//+uEHPFwg+QfIJZxWf////XAnn5CEjLEMnL////////rBrCZEBCuR/////9cR5AzEBzf/+MYwGe+EGrqXhSORDQFcjFREREewDIgJn//8CEj9DTJgfBhcRE5////7wkZWUPOXB8LBETn///+uGW5QxEZ8///6cGU9IRERERJOXgSEH///5YRERERESP1iIgITBiGiwB0C/9MzkX/+MYwHA9GNdBnhMSgLDogA4ERz/1hYY////p4jF8J8oBkALABoAM4Ac4DoAlMN//////h4WP//+ng1DBIgAIDiE4hD4XC5//X//+nhQUETxEVERMRL/////8sImInADogIiIiPACFEQA0A6L/+MYwHw8SJbB3hGS5FxcQAgcREf/WGBj////TxGrWRIh0AAiAAYJAZAA7QAsYt//////64ZY////08V0wCdUCwCoX////wsAgKiBERA4iIj//////gJiJwA6ICIiIiGTkQEMNBLNNTEFNRTMu/+MYwJM/iFrWXhTS5NTI2OTkuNVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV");
+    
     // Fetch data function
     function fetchData() {
       fetch(`${scriptURL}?action=getAllData`)
@@ -266,12 +272,33 @@
       return null;
     }
 
+    // Function untuk memutar suara notifikasi
+    function playSuccessSound() {
+      // Gunakan Web Speech API untuk efek suara ucapan
+      if ('speechSynthesis' in window) {
+        const speech = new SpeechSynthesisUtterance("Berhasil Verifikasi Kehadiran");
+        speech.lang = 'id-ID';
+        speech.volume = 1;
+        speech.rate = 1;
+        speech.pitch = 1;
+        window.speechSynthesis.speak(speech);
+      } else {
+        // Fallback ke suara beep jika Web Speech API tidak didukung
+        successSound.play();
+      }
+    }
+
     // Function untuk menampilkan hasil scan
     function showScanResult(message, isSuccess) {
       const resultElement = document.getElementById('scanResult');
       resultElement.textContent = message;
       resultElement.className = isSuccess ? 'success' : 'error';
       resultElement.style.display = 'block';
+      
+      // Putar suara jika sukses
+      if (isSuccess) {
+        playSuccessSound();
+      }
       
       // Sembunyikan pesan setelah 5 detik
       setTimeout(() => {
