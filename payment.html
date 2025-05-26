@@ -35,17 +35,37 @@
     .back-btn:hover {
       background-color: #2980b9;
     }
-    .search-box {
+    .top-controls {
       display: flex;
-      justify-content: flex-end;
+      justify-content: space-between;
+      align-items: center;
       margin-bottom: 15px;
+      gap: 10px;
+    }
+    .search-box {
+      flex: 1;
+      max-width: 300px;
     }
     .search-box input {
-      padding: 8px;
+      padding: 8px 1px;
       width: 100%;
-      max-width: 300px;
       border: 1px solid #ccc;
       border-radius: 4px;
+    }
+    .scanner-btn {
+      background-color: #ffffff;
+      color: blue;
+      padding: 10px 20px;
+      border: 1px solid #074fe8;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .scanner-btn:hover {
+      background-color: #f0f4ff;
     }
     .table-container {
       overflow-x: auto;
@@ -56,7 +76,7 @@
     table {
       width: 100%;
       border-collapse: collapse;
-      min-width: 900px;
+      min-width: 1000px;
     }
     th, td {
       padding: 12px 15px;
@@ -84,6 +104,15 @@
       background-color: #e74c3c;
       color: white;
     }
+    .barcode-cell {
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      color: #666;
+      max-width: 80px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
     /* Modal styles */
     .modal {
       display: none;
@@ -98,10 +127,10 @@
     }
     .modal-content {
       background-color: #fff;
-      margin: 10% auto;
+      margin: 5% auto;
       padding: 20px;
       border-radius: 8px;
-      max-width: 400px;
+      max-width: 500px;
     }
     .modal-content textarea {
       width: 100%;
@@ -118,14 +147,275 @@
     .modal-actions button {
       margin-left: 10px;
     }
+    /* Scanner modal styles */
+    .scanner-modal .modal-content {
+      max-width: 700px;
+    }
+    .scanner-tabs {
+      display: flex;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #eee;
+    }
+    .scanner-tab {
+      padding: 10px 20px;
+      cursor: pointer;
+      border: none;
+      background: none;
+      font-size: 16px;
+      color: #666;
+      border-bottom: 2px solid transparent;
+    }
+    .scanner-tab.active {
+      color: #074fe8;
+      border-bottom-color: #074fe8;
+      font-weight: bold;
+    }
+    .scanner-tab:hover {
+      background-color: #f5f5f5;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    #scanner-container {
+      width: 25%;
+      max-width: 400px;
+      aspect-ratio: 4/3;
+      margin: 0 auto;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .upload-area {
+      border: 2px dashed #074fe8;
+      border-radius: 8px;
+      padding: 40px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-bottom: 15px;
+    }
+    .upload-area:hover {
+      background-color: #f0f4ff;
+      border-color: #2980b9;
+    }
+    .upload-area.dragover {
+      background-color: #e3f2fd;
+      border-color: #1976d2;
+    }
+    .upload-icon {
+      font-size: 48px;
+      color: #074fe8;
+      margin-bottom: 15px;
+    }
+    .upload-text {
+      font-size: 16px;
+      color: #666;
+      margin-bottom: 10px;
+    }
+    .upload-hint {
+      font-size: 14px;
+      color: #999;
+    }
+    #imageFile {
+      display: none;
+    }
+    .preview-container {
+      margin-top: 15px;
+      text-align: center;
+    }
+    .preview-image {
+      max-width: 100%;
+      max-height: 300px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .scan-btn {
+      background-color: #074fe8;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 15px;
+    }
+    .scan-btn:hover {
+      background-color: #2980b9;
+    }
+    .scan-btn:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    #scanner-result {
+      margin-top: 15px;
+      padding: 10px;
+      background: #f0f0f0;
+      border-radius: 4px;
+      font-family: monospace;
+      min-height: 20px;
+    }
+    .scanner-status {
+      text-align: center;
+      margin: 10px 0;
+      font-weight: bold;
+    }
+    .scanner-status.success {
+      color: #27ae60;
+    }
+    .scanner-status.error {
+      color: #e74c3c;
+    }
+    /* Manual input styles */
+    .manual-input-container {
+      background: #f8f9fa;
+      border: 2px solid #e9ecef;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 15px;
+    }
+    .manual-input-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: #074fe8;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+    .manual-input-group {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .manual-input-group input {
+      flex: 1;
+      padding: 12px;
+      border: 2px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+      font-family: 'Courier New', monospace;
+      text-transform: uppercase;
+    }
+    .manual-input-group input:focus {
+      outline: none;
+      border-color: #074fe8;
+      box-shadow: 0 0 5px rgba(7, 79, 232, 0.3);
+    }
+    .manual-submit-btn {
+      background-color: #074fe8;
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+    }
+    .manual-submit-btn:hover {
+      background-color: #2980b9;
+    }
+    .manual-submit-btn:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    .manual-hint {
+      font-size: 14px;
+      color: #666;
+      text-align: center;
+      margin-top: 10px;
+    }
+    @media (max-width: 768px) {
+      .top-controls {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .search-box {
+        flex: 1;
+        max-width: none;
+        margin-right: 10px;
+      }
+      .scanner-btn {
+        background-color: white;
+        color: #074fe8;
+        border: 1px solid #074fe8;
+        padding: 8px 16px;
+        font-size: 14px;
+        flex-shrink: 0;
+      }
+      .scanner-btn:hover {
+        background-color: #f0f4ff;
+      }
+      #scanner-container {
+        width: 62%;
+        max-width: 300px;
+        aspect-ratio: 4/3;
+        margin: 0 auto;
+        border: 2px solid #ccc;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      .scanner-modal .modal-content {
+        max-width: 95%;
+        margin: 10% auto;
+      }
+      .scanner-tabs {
+  overflow-x: auto;
+  white-space: nowrap; /* Mencegah teks wrap ke baris baru */
+  display: flex; /* Menggunakan flexbox untuk layout yang lebih terkontrol */
+  gap: 8px; /* Memberikan jarak antar tab */
+  padding: 8px 0; /* Memberikan padding vertikal */
+}
+
+.scanner-tabs > * {
+  flex-shrink: 0; /* Mencegah tab menyusut terlalu kecil */
+  min-width: fit-content; /* Memastikan lebar minimum sesuai konten */
+  padding: 8px 16px; /* Memberikan padding dalam tab */
+  text-overflow: ellipsis; /* Menambahkan ... jika teks terlalu panjang */
+  overflow: hidden; /* Menyembunyikan overflow */
+}
+
+/* Alternative solution jika menggunakan display block */
+.scanner-tabs-alternative {
+  overflow-x: auto;
+  white-space: nowrap;
+  padding: 8px 0;
+}
+
+.scanner-tabs-alternative > * {
+  display: inline-block;
+  margin-right: 8px;
+  padding: 8px 16px;
+  vertical-align: top; /* Mencegah baseline alignment issues */
+}
+      .scanner-tab {
+        white-space: nowrap;
+        min-width: 120px;
+      }
+      .manual-input-group {
+        flex-direction: column;
+        gap: 15px;
+      }
+      .manual-input-group input {
+        width: 100%;
+        box-sizing: border-box;
+      }
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <a href="index.html" class="back-btn">Kembali</a> <!-- Tombol Kembali -->
+    <a href="index.html" class="back-btn">Kembali</a>
+    <h4>*Refresh setiap saat dan setiap cek data</h4>
     <h1>Dashboard Admin</h1>
-    <div class="search-box">
-      <input type="text" id="searchInput" placeholder="Cari...">
+    <div class="top-controls">
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Cari...">
+      </div>
+      <button class="scanner-btn" onclick="openScanner()">
+        📷 Scan Barcode
+      </button>
     </div>
     <div class="table-container">
       <table id="ordersTable">
@@ -142,6 +432,7 @@
             <th>Total Harga</th>
             <th>Bukti Pembayaran</th>
             <th>Status</th>
+            <th>Barcode ID</th>
             <th>Aksi</th>
           </tr>
         </thead>
@@ -150,7 +441,7 @@
     </div>
   </div>
 
-  <!-- Modal -->
+  <!-- Cancel Modal -->
   <div id="cancelModal" class="modal">
     <div class="modal-content">
       <h3>Alasan Pembatalan</h3>
@@ -162,24 +453,81 @@
     </div>
   </div>
 
+  <!-- Scanner Modal -->
+  <div id="scannerModal" class="modal scanner-modal">
+    <div class="modal-content">
+      <h3>Scan Barcode untuk Approve</h3>
+      
+      <!-- Tab Navigation -->
+      <div class="scanner-tabs">
+        <button class="scanner-tab active" onclick="switchTab('camera')">📷 Kamera</button>
+        <button class="scanner-tab" onclick="switchTab('upload')">📁 Upload Gambar</button>
+        <button class="scanner-tab" onclick="switchTab('manual')">✏️ Input Manual</button>
+      </div>
+
+      <!-- Camera Tab -->
+      <div id="cameraTab" class="tab-content active">
+        <div id="scanner-container"></div>
+        <div class="scanner-status" id="scanner-status">Arahkan kamera ke barcode</div>
+      </div>
+
+      <!-- Upload Tab -->
+      <div id="uploadTab" class="tab-content">
+        <div class="upload-area" onclick="document.getElementById('imageFile').click()">
+          <div class="upload-icon">📎</div>
+          <div class="upload-text">Klik untuk upload gambar barcode</div>
+          <div class="upload-hint">atau drag & drop gambar di sini</div>
+        </div>
+        <input type="file" id="imageFile" accept="image/*">
+        <div class="preview-container" id="previewContainer" style="display: none;">
+          <img id="previewImage" class="preview-image" alt="Preview">
+          <br>
+          <button class="scan-btn" id="scanImageBtn" onclick="scanImage()">Scan Barcode dari Gambar</button>
+        </div>
+        <div class="scanner-status" id="upload-status"></div>
+      </div>
+
+      <!-- Manual Input Tab -->
+      <div id="manualTab" class="tab-content">
+        <div class="manual-input-container">
+          <div class="manual-input-title">Input Barcode ID Manual</div>
+          <div class="manual-input-group">
+            <input type="text" id="manualBarcodeInput" placeholder="Masukkan Barcode ID (contoh: SS123456)" maxlength="20">
+            <button class="manual-submit-btn" id="manualSubmitBtn" onclick="processManualBarcode()">Proses</button>
+          </div>
+          <div class="manual-hint">Masukkan kode barcode yang tertera pada bukti pembayaran</div>
+        </div>
+        <div class="scanner-status" id="manual-status"></div>
+      </div>
+
+      <div id="scanner-result"></div>
+      
+      <div class="modal-actions">
+        <button onclick="closeScanner()">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
   <script>
-    const API_URL = 'https://script.google.com/macros/s/AKfycbxDsZ2qcIdDp8eRq-0a4utxsEZQZ6dvIOdKN-3TIvafb8OafZ-o6Gz383s-IHX4kPxs/exec';
+    const API_URL = 'https://script.google.com/macros/s/AKfycbwMgJQqZECEWml9t1ODi2EJRC0C1cw06vWE182-TVCS6sdO0BApsOmbiUtU2SqeRIyI/exec';
     const tableBody = document.querySelector('#ordersTable tbody');
     const searchInput = document.getElementById('searchInput');
 
     let orders = [];
     let currentCancel = null;
+    let scannerActive = false;
+    let currentTab = 'camera';
+    let uploadedImage = null;
 
     // Function to fetch orders from the API
     async function fetchOrders() {
         try {
             const res = await fetch(`${API_URL}?action=getOrders`);
             
-            // Log response status for debugging
-            console.log('Response Status:', res.status);  // Debugging response status
-            console.log('Response Headers:', res.headers);  // Debugging response headers
+            console.log('Response Status:', res.status);
+            console.log('Response Headers:', res.headers);
 
-            // Check if the response is OK
             if (!res.ok) {
                 console.error('Failed to fetch data, status:', res.status);
                 alert('Failed to fetch data from server.');
@@ -187,7 +535,7 @@
             }
 
             const data = await res.json();
-            console.log('Fetched data:', data);  // Debugging: check data
+            console.log('Fetched data:', data);
             orders = data;
             renderTable(orders);
         } catch (error) {
@@ -198,31 +546,64 @@
 
     // Function to render table with data
     function renderTable(data) {
-  tableBody.innerHTML = '';
-  data.forEach(order => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${new Date(order.timestamp).toLocaleString()}</td>
-      <td>${order.nama}</td>
-      <td>${order.nia}</td>
-      <td><a href="https://wa.me/${order.whatsapp}" target="_blank">${order.whatsapp}</a></td>
-      <td>${order.produk}</td>
-      <td>${order.ukuran}</td>
-      <td>${order.tipe}</td>
-      <td>${order.payment}</td>
-      <td>${order.totalPrice}</td>
-      <td>${order.buktiPembayaran ? `<a href="${order.buktiPembayaran}" target="_blank">Lihat</a>` : 'Tidak ada'}</td>
-      <td>${order.status}</td>
-      <td>
-        ${order.status === 'Belum Diproses' ? `
-          <button class="btn btn-approve" onclick="approveOrder(${order.id}, '${order.whatsapp}', '${order.produk}', '${order.tipe}')">Setuju</button>
-          <button class="btn btn-cancel" onclick="openModal(${order.id}, '${order.whatsapp}', '${order.produk}', '${order.tipe}')">Cancel</button>
-        ` : ''}
-      </td>
-    `;
-    tableBody.appendChild(tr);
-  });
-}
+      tableBody.innerHTML = '';
+      data.forEach(order => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${new Date(order.timestamp).toLocaleString()}</td>
+          <td>${order.nama}</td>
+          <td>${order.nia}</td>
+          <td><a href="https://wa.me/${order.whatsapp}" target="_blank">${order.whatsapp}</a></td>
+          <td>${order.produk}</td>
+          <td>${order.ukuran}</td>
+          <td>${order.tipe}</td>
+          <td>${order.payment}</td>
+          <td>${order.totalPrice}</td>
+          <td>${order.buktiPembayaran ? `<a href="${order.buktiPembayaran}" target="_blank">Lihat</a>` : 'Tidak ada'}</td>
+          <td>${order.status}</td>
+          <td class="barcode-cell" title="${order.barcodeId || 'Tidak ada'}">${order.barcodeId || '-'}</td>
+          <td>
+            ${order.status === 'Belum Diproses' ? `
+              <button class="btn btn-approve" onclick="approveOrder(${order.id}, '${order.whatsapp}', '${order.produk}', '${order.tipe}')">Setuju</button>
+              <button class="btn btn-cancel" onclick="openModal(${order.id}, '${order.whatsapp}', '${order.produk}', '${order.tipe}')">Cancel</button>
+            ` : ''}
+          </td>
+        `;
+        tableBody.appendChild(tr);
+      });
+    }
+
+    // Switch between scanner tabs
+    function switchTab(tabName) {
+        // Update tab buttons
+        document.querySelectorAll('.scanner-tab').forEach(tab => tab.classList.remove('active'));
+        event.target.classList.add('active');
+        
+        // Update tab content
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        document.getElementById(tabName + 'Tab').classList.add('active');
+        
+        currentTab = tabName;
+        
+        // Stop camera if switching away from camera tab
+        if (tabName !== 'camera' && scannerActive) {
+            Quagga.stop();
+            scannerActive = false;
+        }
+        
+        // Start camera if switching to camera tab
+        if (tabName === 'camera' && !scannerActive) {
+            setTimeout(() => {
+                initScanner();
+            }, 500);
+        }
+        
+        // Clear manual input when switching to manual tab
+        if (tabName === 'manual') {
+            document.getElementById('manualBarcodeInput').value = '';
+            document.getElementById('manual-status').innerHTML = '';
+        }
+    }
 
     // Approve order
     function approveOrder(id, phone, produk, tipe) {
@@ -241,6 +622,288 @@
             console.error('Error during approval:', error);
             alert('An error occurred while updating the order status.');
         });
+    }
+
+    // Approve order by barcode
+    function approveOrderByBarcode(barcodeId, source = 'camera') {
+        const order = orders.find(o => o.barcodeId === barcodeId);
+        let statusElement;
+        
+        switch(source) {
+            case 'camera':
+                statusElement = document.getElementById('scanner-status');
+                break;
+            case 'upload':
+                statusElement = document.getElementById('upload-status');
+                break;
+            case 'manual':
+                statusElement = document.getElementById('manual-status');
+                break;
+            default:
+                statusElement = document.getElementById('scanner-status');
+        }
+            
+        if (order && order.status === 'Belum Diproses') {
+            approveOrder(order.id, order.whatsapp, order.produk, order.tipe);
+            statusElement.innerHTML = '<span style="color: #27ae60;">✅ Pembayaran berhasil disetujui!</span>';
+            setTimeout(() => {
+                closeScanner();
+            }, 2000);
+        } else if (order && order.status !== 'Belum Diproses') {
+            statusElement.innerHTML = '<span style="color: #e74c3c;">❌ Pesanan sudah diproses sebelumnya</span>';
+        } else {
+            statusElement.innerHTML = '<span style="color: #e74c3c;">❌ Barcode tidak ditemukan</span>';
+        }
+    }
+
+    // Process manual barcode input
+    function processManualBarcode() {
+        const barcodeInput = document.getElementById('manualBarcodeInput');
+        const submitBtn = document.getElementById('manualSubmitBtn');
+        const statusElement = document.getElementById('manual-status');
+        
+        const barcodeId = barcodeInput.value.trim().toUpperCase();
+        
+        if (!barcodeId) {
+            statusElement.innerHTML = '<span style="color: #e74c3c;">❌ Mohon masukkan Barcode ID</span>';
+            return;
+        }
+        
+        if (!barcodeId.startsWith('SS')) {
+            statusElement.innerHTML = '<span style="color: #e74c3c;">❌ Format barcode tidak valid (harus dimulai dengan SS)</span>';
+            return;
+        }
+        
+        submitBtn.disabled = true;
+        statusElement.innerHTML = 'Memproses barcode...';
+        
+        // Update scanner result
+        document.getElementById('scanner-result').innerHTML = 'Input Manual: ' + barcodeId;
+        
+        // Process the barcode
+        setTimeout(() => {
+            approveOrderByBarcode(barcodeId, 'manual');
+            submitBtn.disabled = false;
+        }, 500);
+    }
+
+    // Add Enter key support for manual input
+    document.getElementById('manualBarcodeInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            processManualBarcode();
+        }
+    });
+
+    // Auto-uppercase manual input
+    document.getElementById('manualBarcodeInput').addEventListener('input', function(e) {
+        this.value = this.value.toUpperCase();
+    });
+
+    // Open scanner modal
+    function openScanner() {
+        document.getElementById('scannerModal').style.display = 'block';
+        document.getElementById('scanner-status').innerHTML = 'Memulai kamera...';
+        
+        // Reset to camera tab
+        switchTab('camera');
+        
+        setTimeout(() => {
+            initScanner();
+        }, 500);
+    }
+
+    // Close scanner modal
+    function closeScanner() {
+        if (scannerActive) {
+            Quagga.stop();
+            scannerActive = false;
+        }
+        document.getElementById('scannerModal').style.display = 'none';
+        document.getElementById('scanner-container').innerHTML = '';
+        document.getElementById('scanner-result').innerHTML = '';
+        document.getElementById('scanner-status').innerHTML = '';
+        document.getElementById('upload-status').innerHTML = '';
+        document.getElementById('manual-status').innerHTML = '';
+        
+        // Reset upload tab
+        document.getElementById('previewContainer').style.display = 'none';
+        document.getElementById('imageFile').value = '';
+        uploadedImage = null;
+        
+        // Reset manual input tab
+        document.getElementById('manualBarcodeInput').value = '';
+        document.getElementById('manualSubmitBtn').disabled = false;
+    }
+
+    // Initialize barcode scanner for camera
+    function initScanner() {
+        if (currentTab !== 'camera') return;
+        
+        Quagga.init({
+            inputStream: {
+                name: "Live",
+                type: "LiveStream",
+                target: document.querySelector('#scanner-container'),
+                constraints: {
+                    width: 320,
+                    height: 240,
+                    facingMode: "environment"
+                }
+            },
+            decoder: {
+                readers: [
+                    "code_128_reader",
+                    "ean_reader",
+                    "ean_8_reader",
+                    "code_39_reader",
+                    "code_39_vin_reader",
+                    "codabar_reader",
+                    "upc_reader",
+                    "upc_e_reader",
+                    "i2of5_reader"
+                ]
+            }
+        }, function(err) {
+            if (err) {
+                console.log(err);
+                document.getElementById('scanner-status').innerHTML = '<span style="color: #e74c3c;">❌ Error: ' + err.message + '</span>';
+                return;
+            }
+            console.log("Initialization finished. Ready to start");
+            Quagga.start();
+            scannerActive = true;
+            document.getElementById('scanner-status').innerHTML = 'Arahkan kamera ke barcode';
+        });
+
+        Quagga.onDetected(function(data) {
+            const code = data.codeResult.code;
+            console.log("Barcode detected:", code);
+            document.getElementById('scanner-result').innerHTML = 'Terdeteksi: ' + code;
+            
+            // Check if it matches our barcode format (SS + random code)
+            if (code.startsWith('SS')) {
+                approveOrderByBarcode(code, 'camera');
+            } else {
+                document.getElementById('scanner-status').innerHTML = '<span style="color: #e74c3c;">❌ Format barcode tidak valid</span>';
+            }
+        });
+    }
+
+    // Handle file upload
+    document.getElementById('imageFile').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            handleImageUpload(file);
+        }
+    });
+
+    // Handle drag and drop
+    const uploadArea = document.querySelector('.upload-area');
+    
+    uploadArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    });
+    
+    uploadArea.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+    });
+    
+    uploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            const file = files[0];
+            if (file.type.startsWith('image/')) {
+                document.getElementById('imageFile').files = files;
+                handleImageUpload(file);
+            } else {
+                document.getElementById('upload-status').innerHTML = '<span style="color: #e74c3c;">❌ Hanya file gambar yang diperbolehkan</span>';
+            }
+        }
+    });
+
+    // Handle image upload
+    function handleImageUpload(file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            uploadedImage = e.target.result;
+            document.getElementById('previewImage').src = uploadedImage;
+            document.getElementById('previewContainer').style.display = 'block';
+            document.getElementById('upload-status').innerHTML = '<span style="color: #27ae60;">✅ Gambar berhasil diupload, klik tombol scan untuk memproses</span>';
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // Scan barcode from uploaded image
+    function scanImage() {
+        if (!uploadedImage) {
+            document.getElementById('upload-status').innerHTML = '<span style="color: #e74c3c;">❌ Tidak ada gambar untuk di-scan</span>';
+            return;
+        }
+
+        document.getElementById('upload-status').innerHTML = 'Memproses gambar...';
+        document.getElementById('scanImageBtn').disabled = true;
+
+        // Create a temporary image element for Quagga
+        const img = new Image();
+        img.onload = function() {
+            // Create canvas to process the image
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage(img, 0, 0);
+
+            // Use Quagga to decode the image
+            Quagga.decodeSingle({
+                src: uploadedImage,
+                numOfWorkers: 0,
+                inputStream: {
+                    size: 800
+                },
+                decoder: {
+                    readers: [
+                        "code_128_reader",
+                        "ean_reader",
+                        "ean_8_reader",
+                        "code_39_reader",
+                        "code_39_vin_reader",
+                        "codabar_reader",
+                        "upc_reader",
+                        "upc_e_reader",
+                        "i2of5_reader"
+                    ]
+                }
+            }, function(result) {
+                document.getElementById('scanImageBtn').disabled = false;
+                
+                if (result && result.codeResult) {
+                    const code = result.codeResult.code;
+                    console.log("Barcode detected from image:", code);
+                    document.getElementById('scanner-result').innerHTML = 'Terdeteksi: ' + code;
+                    
+                    // Check if it matches our barcode format (SS + random code)
+                    if (code.startsWith('SS')) {
+                        approveOrderByBarcode(code, 'upload');
+                    } else {
+                        document.getElementById('upload-status').innerHTML = '<span style="color: #e74c3c;">❌ Format barcode tidak valid</span>';
+                    }
+                } else {
+                    document.getElementById('upload-status').innerHTML = '<span style="color: #e74c3c;">❌ Tidak dapat menemukan barcode pada gambar</span>';
+                }
+            });
+        };
+        
+        img.onerror = function() {
+            document.getElementById('scanImageBtn').disabled = false;
+            document.getElementById('upload-status').innerHTML = '<span style="color: #e74c3c;">❌ Error memproses gambar</span>';
+        };
+        
+        img.src = uploadedImage;
     }
 
     // Open the modal to input cancel reason
@@ -291,8 +954,21 @@
         renderTable(filtered);
     });
 
+    // Close modals when clicking outside
+    window.onclick = function(event) {
+        const cancelModal = document.getElementById('cancelModal');
+        const scannerModal = document.getElementById('scannerModal');
+        
+        if (event.target == cancelModal) {
+            closeModal();
+        }
+        if (event.target == scannerModal) {
+            closeScanner();
+        }
+    }
+
     // Initial fetch of orders
     fetchOrders();
-</script>
+  </script>
 </body>
 </html>
