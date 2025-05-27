@@ -407,7 +407,7 @@
 <body>
   <div class="container">
     <a href="index.html" class="back-btn">Kembali</a>
-    <h4>*Refresh ssetiap cek data dan tunggu sebentar.</h4>
+    <h4>*Refresh setiap cek data dan tunggu sebentar.</h4>
     <h1>Dashboard Admin</h1>
     <div class="top-controls">
       <div class="search-box">
@@ -509,6 +509,7 @@
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qr-scanner/1.4.2/qr-scanner.umd.min.js"></script>
   <script>
     const API_URL = 'https://script.google.com/macros/s/AKfycbySS6ScrNLq8IAcCCsXODiwh6ca45qyVkTbd_1jccrHGn0mWLZ78IXbxMVJd-FA0-Q/exec';
     const tableBody = document.querySelector('#ordersTable tbody');
@@ -540,7 +541,7 @@
             renderTable(orders);
         } catch (error) {
             console.error('Error during fetch:', error);
-            alert('An error occurred while fetching data.');
+            alert('Sedikit error saat mengambil data. Silahkan lanjut dan refresh website setiap saat, tunggu sesaat.');
         }
     }
 
@@ -712,82 +713,154 @@
         }, 500);
     }
 
-    // Close scanner modal
-    function closeScanner() {
-        if (scannerActive) {
-            Quagga.stop();
-            scannerActive = false;
+    // Updated close scanner function
+function closeScanner() {
+    scannerActive = false;
+    
+    // Stop camera stream
+    const video = document.getElementById('scanner-video');
+    if (video && video.srcObject) {
+        const tracks = video.srcObject.getTracks();
+        tracks.forEach(track => track.stop());
+        video.srcObject = null;
+    }
+    
+    // Stop Quagga if running
+    if (typeof Quagga !== 'undefined') {
+        Quagga.stop();
+    }
+    
+    document.getElementById('scannerModal').style.display = 'none';
+    document.getElementById('scanner-container').innerHTML = '';
+    document.getElementById('scanner-result').innerHTML = '';
+    document.getElementById('scanner-status').innerHTML = '';
+    document.getElementById('upload-status').innerHTML = '';
+    document.getElementById('manual-status').innerHTML = '';
+    
+    // Reset upload tab
+    document.getElementById('previewContainer').style.display = 'none';
+    document.getElementById('imageFile').value = '';
+    uploadedImage = null;
+    
+    // Reset manual input tab
+    document.getElementById('manualBarcodeInput').value = '';
+    document.getElementById('manualSubmitBtn').disabled = false;
+}
+
+    // Initialize dual scanner (Barcode + QR Code)
+function initScanner() {
+    if (currentTab !== 'camera') return;
+    
+    const scannerContainer = document.querySelector('#scanner-container');
+    scannerContainer.innerHTML = '<video id="scanner-video" style="width: 100%; height: 100%; object-fit: cover;"></video>';
+    
+    const video = document.getElementById('scanner-video');
+    let isScanning = false;
+    
+    // Start camera
+    navigator.mediaDevices.getUserMedia({
+        video: { 
+            facingMode: "environment",
+            width: { ideal: 320 },
+            height: { ideal: 240 }
         }
-        document.getElementById('scannerModal').style.display = 'none';
-        document.getElementById('scanner-container').innerHTML = '';
-        document.getElementById('scanner-result').innerHTML = '';
-        document.getElementById('scanner-status').innerHTML = '';
-        document.getElementById('upload-status').innerHTML = '';
-        document.getElementById('manual-status').innerHTML = '';
+    }).then(stream => {
+        video.srcObject = stream;
+        video.play();
+        scannerActive = true;
+        document.getElementById('scanner-status').innerHTML = 'Arahkan kamera ke barcode atau QR code';
         
-        // Reset upload tab
-        document.getElementById('previewContainer').style.display = 'none';
-        document.getElementById('imageFile').value = '';
-        uploadedImage = null;
+        // Start scanning loop
+        scanLoop();
         
-        // Reset manual input tab
-        document.getElementById('manualBarcodeInput').value = '';
-        document.getElementById('manualSubmitBtn').disabled = false;
-    }
-
-    // Initialize barcode scanner for camera
-    function initScanner() {
-        if (currentTab !== 'camera') return;
+    }).catch(err => {
+        console.error('Camera error:', err);
+        document.getElementById('scanner-status').innerHTML = '<span style="color: #e74c3c;">❌ Error mengakses kamera</span>';
+    });
+    
+    function scanLoop() {
+        if (!scannerActive || isScanning) return;
         
-        Quagga.init({
-            inputStream: {
-                name: "Live",
-                type: "LiveStream",
-                target: document.querySelector('#scanner-container'),
-                constraints: {
-                    width: 320,
-                    height: 240,
-                    facingMode: "environment"
+        requestAnimationFrame(() => {
+            if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                // Try QR Code scanning
+                if (window.QrScanner) {
+                    QrScanner.scanImage(video)
+                        .then(result => {
+                            if (result && !isScanning) {
+                                isScanning = true;
+                                handleScanResult(result, 'QR Code');
+                            }
+                        })
+                        .catch(() => {
+                            // QR failed, try barcode with Quagga
+                            tryBarcodeScanning();
+                        });
+                } else {
+                    tryBarcodeScanning();
                 }
-            },
-            decoder: {
-                readers: [
-                    "code_128_reader",
-                    "ean_reader",
-                    "ean_8_reader",
-                    "code_39_reader",
-                    "code_39_vin_reader",
-                    "codabar_reader",
-                    "upc_reader",
-                    "upc_e_reader",
-                    "i2of5_reader"
-                ]
             }
-        }, function(err) {
-            if (err) {
-                console.log(err);
-                document.getElementById('scanner-status').innerHTML = '<span style="color: #e74c3c;">❌ Error: ' + err.message + '</span>';
-                return;
-            }
-            console.log("Initialization finished. Ready to start");
-            Quagga.start();
-            scannerActive = true;
-            document.getElementById('scanner-status').innerHTML = 'Arahkan kamera ke barcode';
-        });
-
-        Quagga.onDetected(function(data) {
-            const code = data.codeResult.code;
-            console.log("Barcode detected:", code);
-            document.getElementById('scanner-result').innerHTML = 'Terdeteksi: ' + code;
             
-            // Check if it matches our barcode format (SS + random code)
-            if (code.startsWith('SS')) {
-                approveOrderByBarcode(code, 'camera');
-            } else {
-                document.getElementById('scanner-status').innerHTML = '<span style="color: #e74c3c;">❌ Format barcode tidak valid</span>';
+            if (scannerActive && !isScanning) {
+                setTimeout(scanLoop, 500); // Scan every 500ms
             }
         });
     }
+    
+    function tryBarcodeScanning() {
+        // Create canvas for Quagga
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = video.videoWidth || 320;
+        canvas.height = video.videoHeight || 240;
+        
+        if (video.videoWidth > 0) {
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            Quagga.decodeSingle({
+                src: canvas.toDataURL(),
+                numOfWorkers: 0,
+                inputStream: {
+                    size: 800
+                },
+                decoder: {
+                    readers: [
+                        "code_128_reader",
+                        "ean_reader",
+                        "ean_8_reader",
+                        "code_39_reader",
+                        "code_39_vin_reader",
+                        "codabar_reader",
+                        "upc_reader",
+                        "upc_e_reader",
+                        "i2of5_reader"
+                    ]
+                }
+            }, function(result) {
+                if (result && result.codeResult && !isScanning) {
+                    isScanning = true;
+                    handleScanResult(result.codeResult.code, 'Barcode');
+                }
+            });
+        }
+    }
+    
+    function handleScanResult(code, type) {
+        console.log(`${type} detected:`, code);
+        document.getElementById('scanner-result').innerHTML = `Terdeteksi ${type}: ${code}`;
+        
+        // Check if it matches our format (SS + random code)
+        if (code.startsWith('SS')) {
+            approveOrderByBarcode(code, 'camera');
+        } else {
+            document.getElementById('scanner-status').innerHTML = '<span style="color: #e74c3c;">❌ Format kode tidak valid</span>';
+            // Reset scanning after 2 seconds
+            setTimeout(() => {
+                isScanning = false;
+            }, 2000);
+        }
+    }
+}
 
     // Handle file upload
     document.getElementById('imageFile').addEventListener('change', function(e) {
@@ -838,27 +911,40 @@
         reader.readAsDataURL(file);
     }
 
-    // Scan barcode from uploaded image
-    function scanImage() {
-        if (!uploadedImage) {
-            document.getElementById('upload-status').innerHTML = '<span style="color: #e74c3c;">❌ Tidak ada gambar untuk di-scan</span>';
-            return;
+    // Updated scan image function for dual scanning
+function scanImage() {
+    if (!uploadedImage) {
+        document.getElementById('upload-status').innerHTML = '<span style="color: #e74c3c;">❌ Tidak ada gambar untuk di-scan</span>';
+        return;
+    }
+
+    document.getElementById('upload-status').innerHTML = 'Memproses gambar...';
+    document.getElementById('scanImageBtn').disabled = true;
+
+    const img = new Image();
+    img.onload = function() {
+        let resultFound = false;
+        
+        // Try QR Code scanning first
+        if (window.QrScanner) {
+            QrScanner.scanImage(img)
+                .then(result => {
+                    if (result && !resultFound) {
+                        resultFound = true;
+                        handleImageScanResult(result, 'QR Code');
+                    }
+                })
+                .catch(() => {
+                    // QR failed, try barcode
+                    if (!resultFound) {
+                        tryBarcodeImageScanning();
+                    }
+                });
+        } else {
+            tryBarcodeImageScanning();
         }
-
-        document.getElementById('upload-status').innerHTML = 'Memproses gambar...';
-        document.getElementById('scanImageBtn').disabled = true;
-
-        // Create a temporary image element for Quagga
-        const img = new Image();
-        img.onload = function() {
-            // Create canvas to process the image
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = img.width;
-            canvas.height = img.height;
-            ctx.drawImage(img, 0, 0);
-
-            // Use Quagga to decode the image
+        
+        function tryBarcodeImageScanning() {
             Quagga.decodeSingle({
                 src: uploadedImage,
                 numOfWorkers: 0,
@@ -879,32 +965,37 @@
                     ]
                 }
             }, function(result) {
-                document.getElementById('scanImageBtn').disabled = false;
-                
-                if (result && result.codeResult) {
-                    const code = result.codeResult.code;
-                    console.log("Barcode detected from image:", code);
-                    document.getElementById('scanner-result').innerHTML = 'Terdeteksi: ' + code;
-                    
-                    // Check if it matches our barcode format (SS + random code)
-                    if (code.startsWith('SS')) {
-                        approveOrderByBarcode(code, 'upload');
-                    } else {
-                        document.getElementById('upload-status').innerHTML = '<span style="color: #e74c3c;">❌ Format barcode tidak valid</span>';
-                    }
-                } else {
-                    document.getElementById('upload-status').innerHTML = '<span style="color: #e74c3c;">❌ Tidak dapat menemukan barcode pada gambar</span>';
+                if (result && result.codeResult && !resultFound) {
+                    resultFound = true;
+                    handleImageScanResult(result.codeResult.code, 'Barcode');
+                } else if (!resultFound) {
+                    document.getElementById('scanImageBtn').disabled = false;
+                    document.getElementById('upload-status').innerHTML = '<span style="color: #e74c3c;">❌ Tidak dapat menemukan barcode atau QR code pada gambar</span>';
                 }
             });
-        };
+        }
         
-        img.onerror = function() {
+        function handleImageScanResult(code, type) {
             document.getElementById('scanImageBtn').disabled = false;
-            document.getElementById('upload-status').innerHTML = '<span style="color: #e74c3c;">❌ Error memproses gambar</span>';
-        };
-        
-        img.src = uploadedImage;
-    }
+            console.log(`${type} detected from image:`, code);
+            document.getElementById('scanner-result').innerHTML = `Terdeteksi ${type}: ${code}`;
+            
+            // Check if it matches our format (SS + random code)
+            if (code.startsWith('SS')) {
+                approveOrderByBarcode(code, 'upload');
+            } else {
+                document.getElementById('upload-status').innerHTML = '<span style="color: #e74c3c;">❌ Format kode tidak valid</span>';
+            }
+        }
+    };
+    
+    img.onerror = function() {
+        document.getElementById('scanImageBtn').disabled = false;
+        document.getElementById('upload-status').innerHTML = '<span style="color: #e74c3c;">❌ Error memproses gambar</span>';
+    };
+    
+    img.src = uploadedImage;
+}
 
     // Open the modal to input cancel reason
     function openModal(id, phone, produk, tipe) {
